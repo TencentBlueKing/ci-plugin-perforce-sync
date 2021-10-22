@@ -131,7 +131,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
             val msg = fileSpecs.first().toString() ?: return
             if (msg.contains("up-to-date")) {
                 logger.info(msg.replace("ERROR: ", ""))
-                return            }
+                return
+            }
         }
         fileSpecs.forEach {
             logger.info("同步文件[$it]到${it.clientPath}")
