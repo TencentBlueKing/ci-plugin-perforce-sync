@@ -1,29 +1,306 @@
 {
-  "atomCode" : "PerforceSync",
-  "execution" : {
-    "language" : "java",
-    "minimumVersion" : "1.8",
-    "demands" : [ ],
-    "target" : "java -jar ATOM_CODE-jar-with-dependencies.jar"
+  "atomCode": "PerforceSync",
+  "execution": {
+    "language": "java",
+    "minimumVersion": "1.8",
+    "demands": [],
+    "target": "java -jar ATOM_CODE-jar-with-dependencies.jar"
   },
-  "input" : {
-    "desc" : {
-      "label" : "描述",
-      "default" : "",
-      "placeholder" : "请输入描述信息",
-      "type" : "vuex-input",
-      "desc" : "描述",
-      "required" : true,
-      "disabled" : false,
-      "hidden" : false,
-      "isSensitive" : false
+  "input": {
+    "p4port": {
+      "label": "P4服务器地址",
+      "placeholder": "如: localhost:1666",
+      "type": "vuex-input",
+      "desc": "p4服务器地址",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "userName": {
+      "label": "用户名",
+      "placeholder": "用户名",
+      "type": "vuex-input",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "ticket_flag": {
+      "text": "是否使用ticket登陆",
+      "default": false,
+      "desc": "支持密码和ticket登陆",
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
+    "password": {
+      "label": "密码",
+      "type": "vuex-input",
+      "inputType": "password",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "ticket_flag",
+          "value": false
+        }]
+      }
+    },
+    "ticket": {
+      "label": "Ticket",
+      "placeholder": "ticket与host相关，如果要颁发host无关的ticket,请使用p4 login -p -a",
+      "type": "vuex-input",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "ticket_flag",
+          "value": true
+        }]
+      }
+    },
+    "serverId": {
+      "label": "ServerId",
+      "placeholder": "p4 info显示的Server license-ip",
+      "desc": "如果license-ip与p4服务器ip不相同，则需要填写license-ip",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "ticket_flag",
+          "value": true
+        }]
+      }
+    },
+    "fileRevSpec": {
+      "label": "同步文件版本",
+      "placeholder": "如: file.c#4 、 //depot/proj1/...@21等等",
+      "type": "vuex-input",
+      "desc": "不填则同步所有文件,支持p4的FileSpec和RevSpec",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "tmp_client_flag": {
+      "text": "是否使用临时client",
+      "default": false,
+      "desc": "创建临时client用来同步文件，同步结束删除临时client",
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
+    "clientName": {
+      "label": "Client Name",
+      "placeholder": "已存在的client name",
+      "type": "vuex-input",
+      "desc": "文件会同步到已存在的client映射路径",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "tmp_client_flag",
+          "value": false
+        }]
+      }
+    },
+    "depotSpec": {
+      "label": "仓库规格",
+      "placeholder": "如//Depot/main/...",
+      "type": "vuex-input",
+      "desc": "用来创建client时的mapping的左边",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "tmp_client_flag",
+          "value": true
+        }]
+      }
+    },
+    "outPath": {
+      "label": "同步的文件输出路径",
+      "placeholder": "用来创建client时的mapping的右边",
+      "type": "vuex-input",
+      "desc": "同步的文件输出路径",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "tmp_client_flag",
+          "value": true
+        }]
+      }
+    },
+    "forceUpdate": {
+      "text": "强制更新",
+      "default": false,
+      "desc": "p4 sync -f",
+      "type": "atom-checkbox",
+
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "noUpdate": {
+      "text": "预览模式",
+      "default": false,
+      "desc": "p4 sync -n",
+      "type": "atom-checkbox",
+
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "clientBypass": {
+      "text": "跳过客户端更新",
+      "default": false,
+      "desc": "p4 sync -k",
+      "type": "atom-checkbox",
+
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "serverBypass": {
+      "text": "跳过服务端更新",
+      "default": false,
+      "desc": "p4 sync -p",
+      "type": "atom-checkbox",
+
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "quiet": {
+      "text": "安静模式",
+      "default": false,
+      "desc": "p4 sync -q",
+      "type": "atom-checkbox",
+
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "safetyCheck": {
+      "text": "安全检查",
+      "default": false,
+      "desc": "p4 sync -s",
+      "type": "atom-checkbox",
+
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "max": {
+      "label": "同步最大数量",
+      "desc": "p4 sync -m",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "batch": {
+      "label": "批处理数量",
+
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "batchSize": {
+      "label": "批处理字节数",
+
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "minimum": {
+      "label": "使用并发同步的最少文件数量",
+
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "minimumSize": {
+      "label": "使用并发同步的最少字节数",
+
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "numberOfThreads": {
+      "label": "并发线程数",
+
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
     }
   },
-  "output" : {
-    "testResult" : {
-      "description" : "升级是否成功",
-      "type" : "string",
-      "isSensitive" : false
-    }
-  }
+  "inputGroups": [{
+    "name": "syncOptions",
+    "label": "同步选项",
+    "isExpanded": false
+  }, {
+    "name": "parallelSyncOptions",
+    "label": "并发同步选项（需要p4服务器支持--parallel参数，老版本服务器可能不支持）",
+    "isExpanded": false
+  }]
 }
