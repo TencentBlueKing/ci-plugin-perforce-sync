@@ -127,12 +127,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     private fun logSyncResults(fileSpecs: List<IFileSpec>) {
         if (fileSpecs.size == 1 && fileSpecs.first().clientPath == null) {
-            var msg = fileSpecs.first().toString()
+            // -q的情况下toString()可能为null
+            val msg = fileSpecs.first().toString() ?: return
             if (msg.contains("up-to-date")) {
-                msg = msg.replace("ERROR: ", "")
-            }
-            logger.info(msg)
-            return
+                logger.info(msg.replace("ERROR: ", ""))
+                return            }
         }
         fileSpecs.forEach {
             logger.info("同步文件[$it]到${it.clientPath}")
