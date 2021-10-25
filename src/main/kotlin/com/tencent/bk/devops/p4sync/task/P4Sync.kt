@@ -10,9 +10,11 @@ import com.tencent.bk.devops.atom.common.Status
 import com.tencent.bk.devops.atom.pojo.AtomResult
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
+import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
+import com.tencent.bk.devops.p4sync.task.util.CredentialUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -26,16 +28,25 @@ class P4Sync : TaskAtom<P4SyncParam> {
     override fun execute(context: AtomContext<P4SyncParam>) {
         val param = context.param
         val result = context.result
+        val ticketId = param.ticketId
         checkParam(param, result)
         if (result.status != Status.success) {
             return
         }
-        syncWithTry(param, result)
+        val (data, type) = CredentialUtils.getCredentialWithType(ticketId)
+        if (type != CredentialType.USERNAME_PASSWORD) {
+            result.message = "凭证错误【$type】，需要用户名+密码类型的凭证"
+            result.status = Status.failure
+            return
+        }
+        val userName = data[0]
+        val credential = data[1]
+        syncWithTry(param, result, userName, credential)
     }
 
-    fun syncWithTry(param: P4SyncParam, result: AtomResult) {
+    fun syncWithTry(param: P4SyncParam, result: AtomResult, userName: String, credential: String) {
         try {
-            sync(param)
+            sync(param, userName, credential)
         } catch (e: Exception) {
             result.status = Status.failure
             result.message = e.message
@@ -43,14 +54,13 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun sync(param: P4SyncParam) {
+    private fun sync(param: P4SyncParam, userName: String, credential: String) {
         with(param) {
+
             val p4client = P4Client(
                 uri = "p4java://${param.p4port}",
-                userName = param.userName,
-                password = param.password,
-                ticket = ticket,
-                serverId = serverId
+                userName = userName,
+                password = credential
             )
             val client = param.getClient(p4client)
             val syncOptions = MoreSyncOptions(
@@ -91,11 +101,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     fun checkParam(param: P4SyncParam, result: AtomResult) {
         with(param) {
-            // 用户凭证检查
-            if (ticket == null && password == null) {
-                result.status = Status.failure
-                result.message = errorMsgUser
-            }
             // client配置检查
             if (clientName == null && (depotSpec == null || outPath == null)) {
                 result.status = Status.failure

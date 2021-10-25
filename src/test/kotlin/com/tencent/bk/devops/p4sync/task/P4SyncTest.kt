@@ -20,7 +20,7 @@ import java.nio.file.attribute.BasicFileAttributes
 class P4SyncTest {
 
     val p4port = ""
-    val userName = ""
+    val userName = "root"
     val password = ""
     val ticket = ""
     val clientName = ""
@@ -40,9 +40,7 @@ class P4SyncTest {
     fun syncByPasswordTest() {
         val param = P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
-            depotSpec = "//Test/..."
+            depotSpec = "//Test/...",
         )
         syncAndCheckByTemp(param)
     }
@@ -52,11 +50,9 @@ class P4SyncTest {
     fun syncByTicket() {
         val param = P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            ticket = ticket,
             depotSpec = "//Test/..."
         )
-        syncAndCheckByTemp(param)
+        syncAndCheckByTemp(param, ticket = ticket)
     }
 
     @DisplayName("同步整个仓库(使用指定client)")
@@ -64,8 +60,6 @@ class P4SyncTest {
     fun syncByClient() {
         val param = P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             clientName = clientName,
             fileRevSpec = "hellot.txt#3"
         )
@@ -77,8 +71,6 @@ class P4SyncTest {
     fun syncByFileRevSpec() {
         val param = P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             depotSpec = "//Test/main/...",
             fileRevSpec = "hellot.txt#3"
         )
@@ -90,52 +82,10 @@ class P4SyncTest {
     fun syncWithOutPath() {
         val param = P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             depotSpec = "//Test/...",
             outPath = "~/data/p4"
         )
         syncAndCheckByTemp(param)
-    }
-
-    @DisplayName("检查用户凭证测试")
-    @Test
-    fun userTest() {
-        // 缺失用户凭证
-        P4SyncParam(
-            p4port = p4port,
-            userName = userName,
-            clientName = anyString
-        ).apply {
-            val result = AtomResult()
-            p4Sync.checkParam(this, result)
-            assertEquals(Status.failure, result.status)
-            assertEquals(P4Sync.errorMsgUser, result.message)
-        }
-
-        // 密码登陆
-        P4SyncParam(
-            p4port = p4port,
-            userName = userName,
-            password = anyString,
-            clientName = anyString
-        ).apply {
-            val result = AtomResult()
-            p4Sync.checkParam(this, result)
-            assertEquals(Status.success, result.status)
-        }
-
-        // ticket登陆
-        P4SyncParam(
-            p4port = p4port,
-            userName = userName,
-            ticket = anyString,
-            clientName = anyString
-        ).apply {
-            val result = AtomResult()
-            p4Sync.checkParam(this, result)
-            assertEquals(Status.success, result.status)
-        }
     }
 
     @DisplayName("检查客户端配置测试")
@@ -144,8 +94,6 @@ class P4SyncTest {
         // 缺少客户端信息
         P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password
         ).apply {
             val result = AtomResult()
             p4Sync.checkParam(this, result)
@@ -156,8 +104,6 @@ class P4SyncTest {
         // 缺少resultPath
         P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             depotSpec = anyString
         ).apply {
             val result = AtomResult()
@@ -169,8 +115,6 @@ class P4SyncTest {
         // 缺少resultPath
         P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             outPath = anyString
         ).apply {
             val result = AtomResult()
@@ -182,8 +126,6 @@ class P4SyncTest {
         // 使用临时客户端
         P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             outPath = anyString,
             depotSpec = anyString
         ).apply {
@@ -195,8 +137,6 @@ class P4SyncTest {
         // 使用已存在客户端
         P4SyncParam(
             p4port = p4port,
-            userName = userName,
-            password = password,
             outPath = anyString,
             depotSpec = anyString
         ).apply {
@@ -206,21 +146,22 @@ class P4SyncTest {
         }
     }
 
-    private fun syncAndCheckByTemp(param: P4SyncParam) {
+    private fun syncAndCheckByTemp(param: P4SyncParam, ticket: String? = null) {
         with(param) {
             assertTrue(isTempClient())
             val clientPath = Paths.get(param.tempRoot, param.tempClientName)
             assertFalse(clientPath.toFile().exists())
             toCleans.add(clientPath)
-            syncAndCheck(param)
+            syncAndCheck(param, ticket)
             val targetPath = Paths.get(param.tempRoot, param.tempClientName)
             assertTrue(targetPath.toFile().exists())
         }
     }
 
-    private fun syncAndCheck(param: P4SyncParam) {
+    private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
-        p4Sync.syncWithTry(param, result)
+        val credential = ticket ?: password
+        p4Sync.syncWithTry(param, result, userName = userName, credential = credential)
         assertEquals(Status.success, result.status)
     }
 

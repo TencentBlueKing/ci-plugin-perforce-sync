@@ -17,72 +17,24 @@
       "hidden": false,
       "isSensitive": false
     },
-    "userName": {
-      "label": "用户名",
-      "placeholder": "用户名",
-      "type": "vuex-input",
+    "ticketId": {
+      "label": "用户凭证",
+      "placeholder": "请选中对应凭证",
+      "type": "selector",
+      "desc": "凭证支持密码和ticket两种，使用凭证类型用户名+密码，密码可以输入p4密码或者ticket",
       "required": true,
       "disabled": false,
       "hidden": false,
-      "isSensitive": false
-    },
-    "ticket_flag": {
-      "text": "是否使用ticket登陆",
-      "default": false,
-      "desc": "支持密码和ticket登陆",
-      "type": "atom-checkbox",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": true
-    },
-    "password": {
-      "label": "密码",
-      "type": "vuex-input",
-      "inputType": "password",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": true,
-      "rely": {
-        "operation": "AND",
-        "expression": [{
-          "key": "ticket_flag",
-          "value": false
-        }]
-      }
-    },
-    "ticket": {
-      "label": "Ticket",
-      "placeholder": "ticket与host相关，如果要颁发host无关的ticket,请使用p4 login -p -a",
-      "type": "vuex-input",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": true,
-      "rely": {
-        "operation": "AND",
-        "expression": [{
-          "key": "ticket_flag",
-          "value": true
-        }]
-      }
-    },
-    "serverId": {
-      "label": "ServerId",
-      "placeholder": "p4 info显示的Server license-ip",
-      "desc": "如果license-ip与p4服务器ip不相同，则需要填写license-ip",
-      "type": "vuex-input",
-      "required": false,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": true,
-      "rely": {
-        "operation": "AND",
-        "expression": [{
-          "key": "ticket_flag",
-          "value": true
-        }]
+      "isSensitive": false,
+      "optionsConf": {
+        "searchable": true,
+        "multiple": false,
+        "url": "/ticket/api/user/credentials/{projectId}/hasPermissionList?permission=USE&credentialTypes=USERNAME_PASSWORD&page=1&pageSize=10000",
+        "paramId": "credentialId",
+        "paramName": "credentialId",
+        "itemTargetUrl": "/ticket/{projectId}/createCredential/USERNAME_PASSWORD",
+        "itemText": "添加新的凭证",
+        "hasAddItem": true
       }
     },
     "fileRevSpec": {
@@ -141,9 +93,9 @@
     },
     "outPath": {
       "label": "同步的文件输出路径",
-      "placeholder": "用来创建client时的mapping的右边",
+      "placeholder": "",
       "type": "vuex-input",
-      "desc": "同步的文件输出路径",
+      "desc": "用来创建client时的mapping的右边",
       "required": true,
       "disabled": false,
       "hidden": false,

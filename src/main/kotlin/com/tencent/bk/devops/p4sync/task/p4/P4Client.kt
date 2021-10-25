@@ -2,9 +2,9 @@ package com.tencent.bk.devops.p4sync.task.p4
 
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.core.file.IFileSpec
+import com.perforce.p4java.exception.AccessException
 import com.perforce.p4java.exception.RequestException
 import com.perforce.p4java.impl.mapbased.client.Client
-import com.perforce.p4java.impl.mapbased.rpc.OneShotServerImpl
 import com.perforce.p4java.impl.mapbased.server.Parameters
 import com.perforce.p4java.impl.mapbased.server.Server
 import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder
@@ -21,20 +21,26 @@ class P4Client(
     // p4java://localhost:1666"
     val uri: String,
     val userName: String,
-    val password: String? = null,
-    val ticket: String? = null,
-    val serverId: String? = null
+    val password: String? = null
 ) {
     private val server: IOptionsServer = getOptionsServer(uri, null)
 
     init {
         server.connect()
         server.userName = userName
-        if (password != null) {
+        // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
+        // 所以这里不确定用户设置的是密码还是ticket，
+        // 所以先进行密码登录，如果失败，则进行ticket登录
+        try {
             server.login(password)
-        } else {
-            (server as OneShotServerImpl).serverId = serverId
-            server.authTicket = ticket
+        } catch (e: AccessException) {
+            // 触发认证，设置serverId。否则设置ticket的时候会根据serverAddress,
+            // 获取时候又根据serverId来获取，导致不匹配，获取不到ticket，认证失败
+            server.loginStatus
+            server.authTicket = password
+        }
+        if (!server.loginStatus.contains("ticket expires")) {
+            throw AccessException("登录凭证错误，认证失败！")
         }
     }
 

@@ -15,28 +15,11 @@ class P4SyncParam(
      * */
     @JsonProperty("p4port")
     val p4port: String,
-
     /**
-     * 用户名
+     * 用户凭证
      * */
-    @JsonProperty("userName")
-    val userName: String,
-    /**
-     * 密码
-     * */
-    @JsonProperty("password")
-    val password: String? = null,
-    /**
-     * p4 ticket
-     * */
-    @JsonProperty("ticket")
-    val ticket: String? = null,
-    /**
-     * Server license-ip
-     * 用于存储ticket认证
-     * */
-    @JsonProperty("serverId")
-    val serverId: String? = null,
+    @JsonProperty("ticketId")
+    val ticketId: String = "",
     /**
      * 同步文件版本
      * */
