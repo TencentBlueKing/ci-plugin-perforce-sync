@@ -11,6 +11,7 @@ import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.option.client.SyncOptions
 import com.perforce.p4java.option.server.DeleteClientOptions
+import com.perforce.p4java.option.server.TrustOptions
 import com.perforce.p4java.server.CmdSpec
 import com.perforce.p4java.server.IOptionsServer
 import com.perforce.p4java.server.IServer
@@ -26,8 +27,10 @@ class P4Client(
     private val server: IOptionsServer = getOptionsServer(uri, null)
 
     init {
-        server.connect()
         server.userName = userName
+        server.addTrust(TrustOptions().setAutoAccept(true))
+        server.connect()
+
         // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
         // 所以这里不确定用户设置的是密码还是ticket，
         // 所以先进行密码登录，如果失败，则进行ticket登录
