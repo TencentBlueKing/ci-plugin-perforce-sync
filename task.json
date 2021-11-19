@@ -17,6 +17,16 @@
       "hidden": false,
       "isSensitive": false
     },
+    "httpProxy": {
+      "label": "HTTP代理地址",
+      "placeholder": "如: devnet-proxy.oa.com:8080",
+      "type": "vuex-input",
+      "desc": "HTTP代理地址",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
     "ticketId": {
       "label": "用户凭证",
       "placeholder": "请选中对应凭证",
