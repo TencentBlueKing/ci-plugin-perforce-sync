@@ -120,7 +120,10 @@ public class RpcSocketHelper {
 		if (secure) {
 			if (httpProxyHost != null) {
 				Socket proxySocket = new Socket(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(httpProxyHost, httpProxyPort)));
+				configureSocket(proxySocket, properties);
+				
 				socket = RpcSSLSocketFactory.getInstance(properties).createSocket(proxySocket, host, port, false);
+				return socket;
 			}
 			else {
 				socket = RpcSSLSocketFactory.getInstance(properties).createSocket();
