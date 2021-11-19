@@ -123,6 +123,7 @@ public class RpcSocketHelper {
 				configureSocket(proxySocket, properties);
 
 				proxySocket.bind(new InetSocketAddress(0));
+				proxySocket.connect(new InetSocketAddress(host, port));
 				return RpcSSLSocketFactory.getInstance(properties).createSocket(proxySocket, host, port, false);
 			}
 			else {
