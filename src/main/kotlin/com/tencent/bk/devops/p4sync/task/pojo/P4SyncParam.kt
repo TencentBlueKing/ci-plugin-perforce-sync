@@ -16,6 +16,11 @@ class P4SyncParam(
     @JsonProperty("p4port")
     val p4port: String,
     /**
+     * HTTP代理地址
+     * */
+    @JsonProperty("httpProxy")
+    val httpProxy: String? = null,
+    /**
      * 用户凭证
      * */
     @JsonProperty("ticketId")

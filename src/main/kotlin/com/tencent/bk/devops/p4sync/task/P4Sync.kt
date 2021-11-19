@@ -3,6 +3,7 @@ package com.tencent.bk.devops.p4sync.task
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.core.file.FileSpecBuilder
 import com.perforce.p4java.core.file.IFileSpec
+import com.perforce.p4java.impl.mapbased.rpc.stream.helper.RpcSocketHelper
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.option.client.SyncOptions
 import com.tencent.bk.devops.atom.AtomContext
@@ -38,6 +39,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
             result.message = "凭证错误【$type】，需要用户名+密码类型的凭证"
             result.status = Status.failure
             return
+        }
+        if (param.httpProxy != null && param.httpProxy.contains(':')) {
+            val proxyParam = param.httpProxy.split(':')
+            RpcSocketHelper.httpProxyHost = proxyParam[0]
+            RpcSocketHelper.httpProxyPort = proxyParam[1].toInt()
         }
         val userName = data[0]
         val credential = data[1]
