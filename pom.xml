@@ -79,6 +79,13 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>
+                                        com.tencent.bk.devops.atom.AtomRunner
+                                    </mainClass>
+                                </manifest>
+                            </archive>
                             <descriptors>
                                 <descriptor>src/assembly/jar-with-deps.xml</descriptor>
                             </descriptors>
