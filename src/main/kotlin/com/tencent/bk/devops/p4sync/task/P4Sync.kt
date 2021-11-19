@@ -62,9 +62,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     private fun sync(param: P4SyncParam, userName: String, credential: String) {
         with(param) {
-
+            val useSSL = param.p4port.startsWith("ssl:")
             val p4client = P4Client(
-                uri = "p4java://${param.p4port}",
+                uri = if (useSSL) "p4javassl://${param.p4port.substring(4)}" else "p4java://${param.p4port}",
                 userName = userName,
                 password = credential
             )
