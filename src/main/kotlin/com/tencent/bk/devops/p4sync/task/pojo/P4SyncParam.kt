@@ -92,7 +92,7 @@ class P4SyncParam(
      * 未指定clientName时生效
      * */
     @JsonProperty("view")
-    val view: List<String>? = null,
+    val view: String? = null,
     /**
      * 同步的文件输出路径
      * 未指定clientName时生效
@@ -168,7 +168,7 @@ class P4SyncParam(
         Files.createDirectories(Paths.get(rootPath))
         return Workspace(
             name = clientName, description = "create by p4sync",
-            root = rootPath, mappings = view,
+            root = rootPath, mappings = view?.lines(),
             stream = stream,
             lineEnd = lineEnd,
             options = ClientOptions(
