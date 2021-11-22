@@ -21,7 +21,7 @@ class P4SyncTest {
     val userName = "root"
     val password = ""
     val ticket = ""
-    val clientName = "felix_pc_client"
+    val clientName = "felix_pc_test"
     val stream = "//Test/main"
     val rootPath = System.getProperty("java.io.tmpdir").plus("tmp")
 
@@ -56,7 +56,8 @@ class P4SyncTest {
             clientName = clientName,
             rootPath = rootPath,
             forceUpdate = true,
-            view = arrayListOf("//demo/... //$clientName/demo/...")
+            view = "//demo/... //$clientName/demo/...\n" +
+                "//depot/... //$clientName/depot/..."
         )
         syncAndCheck(param)
     }
