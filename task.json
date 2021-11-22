@@ -237,8 +237,8 @@
     "lineEnd": {
       "label": "LineEnd",
       "default": "LOCAL",
-      "placeholder": "LOCAL,UNIX,MAC,WIN,SHARE",
-      "desc": "Line ending characters for text files",
+      "placeholder": "",
+      "desc": "Line ending characters for text files,(LOCAL,UNIX,MAC,WIN,SHARE)",
       "type": "vuex-input",
       "required": false,
       "disabled": false,

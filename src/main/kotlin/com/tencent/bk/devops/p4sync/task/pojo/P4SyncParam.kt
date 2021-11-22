@@ -91,13 +91,13 @@ class P4SyncParam(
      * 用来创建client时的mapping的左边
      * 未指定clientName时生效
      * */
-    @JsonProperty("depotSpec")
+    @JsonProperty("view")
     val view: List<String>? = null,
     /**
      * 同步的文件输出路径
      * 未指定clientName时生效
      * */
-    @JsonProperty("outPath")
+    @JsonProperty("rootPath")
     val rootPath: String,
     /**
      * 强制更新 -f
