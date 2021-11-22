@@ -48,6 +48,7 @@ class P4SyncParam(
     /**
      * Defines the line end options available for text files.
      * */
+    @JsonProperty("lineEnd")
     val lineEnd: IClientSummary.ClientLineEnd = IClientSummary.ClientLineEnd.LOCAL,
 
     /**

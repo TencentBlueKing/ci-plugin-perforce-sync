@@ -75,6 +75,12 @@ class P4Sync : TaskAtom<P4SyncParam> {
             )
             p4client.use {
                 val client = param.getClient(p4client)
+                if (client.root != param.rootPath) {
+                    throw RuntimeException(
+                        "当前客户端不在它的工作空间下，客户端根目录:${client.root}, " +
+                            "工作空间根目录:${param.rootPath}"
+                    )
+                }
                 val syncOptions = MoreSyncOptions(
                     forceUpdate, noUpdate, clientBypass,
                     serverBypass, quiet, safetyCheck, max

@@ -234,6 +234,17 @@
       "isSensitive": false,
       "groupName": "parallelSyncOptions"
     },
+    "lineEnd": {
+      "label": "LineEnd",
+      "placeholder": "LOCAL,UNIX,MAC,WIN,SHARE",
+      "desc": "Line ending characters for text files",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
     "allWrite": {
       "text": "AllWrite",
       "default": false,
