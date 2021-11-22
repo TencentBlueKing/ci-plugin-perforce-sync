@@ -1,10 +1,14 @@
 package com.tencent.bk.devops.p4sync.task.p4
 
 import com.perforce.p4java.client.IClient
+import com.perforce.p4java.client.IClientViewMapping
 import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.exception.AccessException
 import com.perforce.p4java.exception.RequestException
+import com.perforce.p4java.impl.generic.client.ClientView
+import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping
 import com.perforce.p4java.impl.mapbased.client.Client
+import com.perforce.p4java.impl.mapbased.client.ClientSummary
 import com.perforce.p4java.impl.mapbased.server.Parameters
 import com.perforce.p4java.impl.mapbased.server.Server
 import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder
@@ -24,7 +28,7 @@ class P4Client(
     val uri: String,
     val userName: String,
     val password: String? = null
-) {
+) : AutoCloseable {
     private val server: IOptionsServer = getOptionsServer(uri, null)
 
     init {
@@ -135,15 +139,33 @@ class P4Client(
     }
 
     fun createClient(workspace: Workspace): IClient {
+        val client = buildClient(workspace)
+        server.createClient(client)
+        return client
+    }
+
+    private fun buildClient(workspace: Workspace): Client {
         with(workspace) {
-            val client = Client.newClient(
-                server, // p4java server object
-                name, // client name
-                description, // client description
-                root, // client root
-                mappings.toTypedArray() // client mappings
-            )
-            server.createClient(client)
+            val summary = ClientSummary()
+            summary.name = name
+            summary.description = description
+            summary.root = root
+            summary.lineEnd = lineEnd
+            summary.options = options
+            summary.setServer(server)
+            summary.stream = stream
+            val client = Client(summary, server, false)
+            // 非流仓库时，使用ws view
+            if (stream == null && mappings != null) {
+                val clientView = ClientView()
+                clientView.client = client
+                val viewMappings: MutableList<IClientViewMapping> = ArrayList()
+                for ((i, mapping) in mappings.withIndex()) {
+                    viewMappings.add(ClientViewMapping(i, mapping))
+                }
+                clientView.entryList = viewMappings
+                client.clientView = clientView
+            }
             return client
         }
     }
@@ -156,5 +178,12 @@ class P4Client(
     fun deleteClient(name: String, isForce: Boolean = false): String {
         val deleteClientOptions = DeleteClientOptions(isForce)
         return server.deleteClient(name, deleteClientOptions)
+    }
+
+    override fun close() {
+        try {
+            server.disconnect()
+        } catch (ignore: Exception) {
+        }
     }
 }

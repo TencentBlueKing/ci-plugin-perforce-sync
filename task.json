@@ -47,6 +47,36 @@
         "hasAddItem": true
       }
     },
+    "rootPath": {
+      "label": "工作空间根目录",
+      "placeholder": "如/data/workspace",
+      "type": "vuex-input",
+      "desc": "",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "clientName": {
+      "label": "工作空间名称",
+      "placeholder": "如果没有则会创建",
+      "type": "vuex-input",
+      "desc": "",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "streamName": {
+      "label": "Stream Name",
+      "placeholder": "拉取Stream必填",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
     "fileRevSpec": {
       "label": "同步文件版本",
       "placeholder": "如: file.c#4 、 //depot/proj1/...@21等等",
@@ -57,67 +87,17 @@
       "hidden": false,
       "isSensitive": false
     },
-    "tmp_client_flag": {
-      "text": "是否使用临时client",
-      "default": false,
-      "desc": "创建临时client用来同步文件，同步结束删除临时client",
-      "type": "atom-checkbox",
-      "required": true,
+    "view": {
+      "label": "工作空间视图",
+      "placeholder": "可不填，非stream仓库时选择。\n//depot/...     //ws/...\n//depot/dir/... //ws/dir2/...",
+      "type": "vuex-textarea",
+      "desc": "仓库和工作空间映射关系,",
+      "required": false,
       "disabled": false,
       "hidden": false,
-      "isSensitive": true
+      "isSensitive": false
     },
-    "clientName": {
-      "label": "Client Name",
-      "placeholder": "已存在的client name",
-      "type": "vuex-input",
-      "desc": "文件会同步到已存在的client映射路径",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": false,
-      "rely": {
-        "operation": "AND",
-        "expression": [{
-          "key": "tmp_client_flag",
-          "value": false
-        }]
-      }
-    },
-    "depotSpec": {
-      "label": "仓库规格",
-      "placeholder": "如//Depot/main/...",
-      "type": "vuex-input",
-      "desc": "用来创建client时的mapping的左边",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": false,
-      "rely": {
-        "operation": "AND",
-        "expression": [{
-          "key": "tmp_client_flag",
-          "value": true
-        }]
-      }
-    },
-    "outPath": {
-      "label": "同步的文件输出路径",
-      "placeholder": "",
-      "type": "vuex-input",
-      "desc": "用来创建client时的mapping的右边",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": false,
-      "rely": {
-        "operation": "AND",
-        "expression": [{
-          "key": "tmp_client_flag",
-          "value": true
-        }]
-      }
-    },
+
     "forceUpdate": {
       "text": "强制更新",
       "default": false,
@@ -246,7 +226,6 @@
     },
     "numberOfThreads": {
       "label": "并发线程数",
-
       "type": "vuex-input",
       "desc": "",
       "required": false,
@@ -254,9 +233,80 @@
       "hidden": false,
       "isSensitive": false,
       "groupName": "parallelSyncOptions"
+    },
+    "allWrite": {
+      "text": "AllWrite",
+      "default": false,
+      "desc": "Specifies whether unopened files are always writable. By default, Helix server makes unopened files read-only. ",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "clobber": {
+      "text": "Alobber",
+      "default": false,
+      "desc": "Specifies whether p4 sync overwrites writable but unopened workspace files. (By default, Helix server does not overwrite unopened files if they are writable.)",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "compress": {
+      "text": "Compress",
+      "default": false,
+      "desc": "Specifies whether data is compressed when it is sent between your computer and the Helix server.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "locked": {
+      "text": "Locked",
+      "default": false,
+      "desc": "Specifies whether other users can use, edit, or delete the client workspace specification. A Helix server administrator can override the lock with the -f (force) option.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "modtime": {
+      "text": "Modtime",
+      "default": false,
+      "desc": "For files without the +m (modtime) file type modifier, if modtime is set, the modification date (on the local filesystem) of a newly synced file is the datestamp on the file when the file was submitted to the depot. If nomodtime is set, the modification date is the date and time of sync.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "rmdir": {
+      "text": "Rmdir",
+      "default": false,
+      "desc": "Specifies whether p4 sync deletes empty directories in a workspace if all files in the directory have been removed.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
     }
   },
+
   "inputGroups": [{
+    "name": "fileOptions",
+    "label": "文件选项",
+    "isExpanded": true
+  }, {
     "name": "syncOptions",
     "label": "同步选项",
     "isExpanded": false

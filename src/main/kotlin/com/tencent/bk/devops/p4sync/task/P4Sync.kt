@@ -11,12 +11,17 @@ import com.tencent.bk.devops.atom.common.Status
 import com.tencent.bk.devops.atom.pojo.AtomResult
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
+import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
+import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
+import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
+import com.tencent.bk.devops.p4sync.task.constants.P4_USER
 import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
 import com.tencent.bk.devops.p4sync.task.util.CredentialUtils
 import org.slf4j.LoggerFactory
+import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.random.Random
@@ -68,24 +73,25 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 userName = userName,
                 password = credential
             )
-            val client = param.getClient(p4client)
-            val syncOptions = MoreSyncOptions(
-                forceUpdate, noUpdate, clientBypass,
-                serverBypass, quiet, safetyCheck, max
-            )
-            val parallelSyncOptions = ParallelSyncOptions(
-                batch, batchSize, minimum,
-                minimumSize, numberOfThreads, null
-            )
-            if (fileRevSpec != null) {
-                val fileSpecs = FileSpecBuilder.makeFileSpecList(fileRevSpec)
-                logSync(p4client, client, fileSpecs, syncOptions, parallelSyncOptions)
-            } else {
-                // 同步所有文件
-                logSync(p4client, client, null, syncOptions, parallelSyncOptions)
-            }
-            if (isTempClient()) {
-                p4client.deleteClient(tempClientName, false)
+            p4client.use {
+                val client = param.getClient(p4client)
+                val syncOptions = MoreSyncOptions(
+                    forceUpdate, noUpdate, clientBypass,
+                    serverBypass, quiet, safetyCheck, max
+                )
+                val parallelSyncOptions = ParallelSyncOptions(
+                    batch, batchSize, minimum,
+                    minimumSize, numberOfThreads, null
+                )
+                if (fileRevSpec != null) {
+                    val fileSpecs = FileSpecBuilder.makeFileSpecList(fileRevSpec)
+                    logSync(p4client, client, fileSpecs, syncOptions, parallelSyncOptions)
+                } else {
+                    // 同步所有文件
+                    logSync(p4client, client, null, syncOptions, parallelSyncOptions)
+                }
+                // 保存client信息
+                save(client, p4port)
             }
         }
     }
@@ -107,19 +113,12 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     fun checkParam(param: P4SyncParam, result: AtomResult) {
         with(param) {
-            // client配置检查
-            if (clientName == null && (depotSpec == null || outPath == null)) {
-                result.status = Status.failure
-                result.message = errorMsgClient
-            }
             // 检查输出路径
-            outPath?.let {
-                try {
-                    checkPathWriteAbility(outPath)
-                } catch (e: Exception) {
-                    result.status = Status.failure
-                    result.message = "同步的文件输出路径不可用: ${e.message}"
-                }
+            try {
+                checkPathWriteAbility(rootPath)
+            } catch (e: Exception) {
+                result.status = Status.failure
+                result.message = "同步的文件输出路径不可用: ${e.message}"
             }
         }
     }
@@ -151,8 +150,15 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    companion object {
-        const val errorMsgUser = "ticket和password必须填写一个"
-        const val errorMsgClient = "客户端名称或者（仓库和同步文件存放路径）必须填写一个"
+    private fun save(client: IClient, uri: String) {
+        val p4root = client.root
+        val p4user = client.server.userName
+        val configFilePath = Paths.get(p4root, P4_CONFIG_FILE_NAME)
+        val outputStream = Files.newOutputStream(configFilePath)
+        val printWriter = PrintWriter(outputStream)
+        printWriter.println("$P4_USER=$p4user")
+        printWriter.println("$P4_PORT=$uri")
+        printWriter.print("$P4_CLIENT=${client.name}")
+        logger.info("保存工作空间配置文件${configFilePath.toFile().canonicalPath}成功")
     }
 }

@@ -2,6 +2,8 @@ package com.tencent.bk.devops.p4sync.task.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.perforce.p4java.client.IClient
+import com.perforce.p4java.client.IClientSummary
+import com.perforce.p4java.impl.generic.client.ClientOptions
 import com.tencent.bk.devops.atom.pojo.AtomBaseParam
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
@@ -35,20 +37,67 @@ class P4SyncParam(
      * 如果为空则创建一个临时client
      * */
     @JsonProperty("clientName")
-    val clientName: String? = null,
+    val clientName: String,
+
+    /**
+     * stream
+     * */
+    @JsonProperty("stream")
+    val stream: String? = null,
+
+    /**
+     * Defines the line end options available for text files.
+     * */
+    val lineEnd: IClientSummary.ClientLineEnd = IClientSummary.ClientLineEnd.LOCAL,
+
+    /**
+     * client options
+     * */
+    @JsonProperty("allWrite")
+    var allWrite: Boolean = false,
+
+    /**
+     * client options
+     * */
+    @JsonProperty("clobber")
+    val clobber: Boolean = false,
+
+    /**
+     * client options
+     * */
+    @JsonProperty("compress")
+    val compress: Boolean = false,
+
+    /**
+     * client options
+     * */
+    @JsonProperty("locked")
+    val locked: Boolean = false,
+
+    /**
+     * client options
+     * */
+    @JsonProperty("modtime")
+    val modtime: Boolean = false,
+
+    /**
+     * client options
+     * */
+    @JsonProperty("rmdir")
+    val rmdir: Boolean = false,
     /**
      * 仓库规格
      * 用来创建client时的mapping的左边
      * 未指定clientName时生效
      * */
     @JsonProperty("depotSpec")
-    val depotSpec: String? = null,
+    val view: List<String>? = null,
     /**
      * 同步的文件输出路径
      * 未指定clientName时生效
      * */
     @JsonProperty("outPath")
-    val outPath: String? = null,
+    val rootPath: String,
     /**
      * 强制更新 -f
      * */
@@ -114,29 +163,22 @@ class P4SyncParam(
 
 ) : AtomBaseParam() {
 
-    val tempClientName = "temp_" + System.currentTimeMillis()
-    val tempRoot: String = outPath ?: System.getProperty("java.io.tmpdir")
-
-    private fun getTempWorkspace(): Workspace {
-        val clientRoot = Paths.get(tempRoot, tempClientName)
-        Files.createDirectories(clientRoot)
+    private fun getWorkspace(): Workspace {
+        Files.createDirectories(Paths.get(rootPath))
         return Workspace(
-            name = tempClientName, description = "create by p4sync",
-            root = clientRoot.toString(), mappings = arrayListOf("$depotSpec //$tempClientName/...")
+            name = clientName, description = "create by p4sync",
+            root = rootPath, mappings = view,
+            stream = stream,
+            lineEnd = lineEnd,
+            options = ClientOptions(
+                allWrite, clobber,
+                compress, locked, modtime, rmdir
+            )
         )
     }
 
     fun getClient(p4Client: P4Client): IClient {
-        return clientName?.let {
-            p4Client.getClient(clientName)
-                ?: throw IllegalArgumentException("client $clientName 不存在")
-        } ?: let {
-            val workspace = getTempWorkspace()
-            p4Client.createClient(workspace)
-        }
-    }
-
-    fun isTempClient(): Boolean {
-        return clientName == null
+        return p4Client.getClient(clientName)
+            ?: p4Client.createClient(getWorkspace())
     }
 }
