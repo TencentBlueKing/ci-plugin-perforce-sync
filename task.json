@@ -67,9 +67,9 @@
       "hidden": false,
       "isSensitive": false
     },
-    "streamName": {
-      "label": "Stream Name",
-      "placeholder": "拉取Stream必填",
+    "stream": {
+      "label": "Stream",
+      "placeholder": "如：//JamCode/main",
       "type": "vuex-input",
       "desc": "",
       "required": false,
