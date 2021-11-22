@@ -15,6 +15,7 @@ import com.perforce.p4java.option.server.TrustOptions
 import com.perforce.p4java.server.CmdSpec
 import com.perforce.p4java.server.IOptionsServer
 import com.perforce.p4java.server.IServer
+import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import org.apache.commons.lang3.ArrayUtils
 
@@ -28,7 +29,9 @@ class P4Client(
 
     init {
         server.userName = userName
-        server.addTrust(TrustOptions().setAutoAccept(true))
+        if (uri.startsWith(IServerAddress.Protocol.P4JAVASSL.toString())) {
+            server.addTrust(TrustOptions().setAutoAccept(true))
+        }
         server.connect()
 
         // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
