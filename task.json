@@ -77,6 +77,16 @@
       "hidden": false,
       "isSensitive": false
     },
+    "unshelveId": {
+      "label": "unshelveId",
+      "placeholder": "如：526",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
     "fileRevSpec": {
       "label": "同步文件版本",
       "placeholder": "如: file.c#4 、 //depot/proj1/...@21等等",

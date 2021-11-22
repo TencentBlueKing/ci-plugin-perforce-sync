@@ -15,6 +15,8 @@ import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
 import com.tencent.bk.devops.p4sync.task.constants.P4_USER
+import com.tencent.bk.devops.p4sync.task.constants.SYNC
+import com.tencent.bk.devops.p4sync.task.constants.UN_SHELVE
 import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
@@ -96,6 +98,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     // 同步所有文件
                     logSync(p4client, client, null, syncOptions, parallelSyncOptions)
                 }
+                // unshelve
+                unshelveId?.let {
+                    logSyncResults(p4client.unshelve(unshelveId, client), UN_SHELVE)
+                }
                 // 保存client信息
                 save(client, p4port)
             }
@@ -141,8 +147,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
         Files.delete(tmpFile)
     }
 
-    private fun logSyncResults(fileSpecs: List<IFileSpec>) {
-        if (fileSpecs.size == 1 && fileSpecs.first().clientPath == null) {
+    private fun logSyncResults(fileSpecs: List<IFileSpec>, action: String = SYNC) {
+        if (fileSpecs.size == 1 && fileSpecs.first().clientPath == null && action != UN_SHELVE) {
             // -q的情况下msg可能为null
             var msg = fileSpecs.first().toString() ?: return
             if (msg.contains("up-to-date")) {
@@ -152,7 +158,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
             return
         }
         fileSpecs.forEach {
-            logger.info("同步文件[$it]到${it.clientPath}")
+            if (it.clientPath != null) {
+                logger.info("同步文件[$it]到${it.clientPath}")
+            } else {
+                logger.info("文件[$it]-unshelved")
+            }
         }
     }
 

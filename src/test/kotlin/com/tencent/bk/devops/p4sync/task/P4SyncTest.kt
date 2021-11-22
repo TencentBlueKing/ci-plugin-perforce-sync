@@ -93,6 +93,19 @@ class P4SyncTest {
         syncAndCheck(param)
     }
 
+    @DisplayName("unshelve测试")
+    @Test
+    fun unshelveTest() {
+        val param = P4SyncParam(
+            p4port = p4port,
+            clientName = clientName,
+            rootPath = rootPath,
+            stream = stream,
+            unshelveId = 527
+        )
+        syncAndCheck(param)
+    }
+
     private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
         val credential = ticket ?: password

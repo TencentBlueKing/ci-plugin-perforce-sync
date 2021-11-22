@@ -181,6 +181,13 @@ class P4Client(
         return server.deleteClient(name, deleteClientOptions)
     }
 
+    fun unshelve(id: Int, client: IClient): List<IFileSpec> {
+        return client.unshelveChangelist(
+            id, null,
+            0, false, false
+        )
+    }
+
     override fun close() {
         try {
             server.disconnect()

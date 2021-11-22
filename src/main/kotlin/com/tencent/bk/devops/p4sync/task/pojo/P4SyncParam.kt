@@ -160,7 +160,9 @@ class P4SyncParam(
      * Specifies the number of independent network connections to be used during parallelisation
      */
     @JsonProperty("numberOfThreads")
-    val numberOfThreads: Int = 0
+    val numberOfThreads: Int = 0,
+    @JsonProperty("unshelveId")
+    val unshelveId: Int? = null
 
 ) : AtomBaseParam() {
 
