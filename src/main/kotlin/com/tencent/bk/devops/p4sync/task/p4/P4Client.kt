@@ -154,6 +154,7 @@ class P4Client(
             summary.options = options
             summary.setServer(server)
             summary.stream = stream
+            summary.ownerName = server.userName
             val client = Client(summary, server, false)
             // 非流仓库时，使用ws view
             if (stream == null && mappings != null) {

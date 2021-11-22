@@ -33,7 +33,7 @@ class P4SyncTest {
     @AfterEach
     fun afterEach() {
         toCleans.forEach { cleanDir(it) }
-        P4Client("p4java://$p4port", userName, password).deleteClient(clientName)
+        P4Client("p4java://$p4port", userName, password).deleteClient(clientName, true)
     }
     @DisplayName("使用stream同步仓库")
     @Test
@@ -58,6 +58,37 @@ class P4SyncTest {
             forceUpdate = true,
             view = "//demo/... //$clientName/demo/...\n" +
                 "//depot/... //$clientName/depot/..."
+        )
+        syncAndCheck(param)
+    }
+
+    @DisplayName("使用全量参数")
+    @Test
+    fun syncByAllParam() {
+        val param = P4SyncParam(
+            p4port = p4port,
+            clientName = clientName,
+            rootPath = rootPath,
+            forceUpdate = true,
+            stream = stream,
+            noUpdate = true,
+            clientBypass = true,
+//            serverBypass = true,
+            quiet = true,
+//            safetyCheck = true,
+            max = 10,
+            batch = 10,
+            batchSize = 10,
+            minimum = 5,
+            minimumSize = 512,
+            numberOfThreads = 10,
+            allWrite = true,
+            clobber = true,
+            compress = true,
+            locked = true,
+            modtime = true,
+            rmdir = true,
+            lineEnd = "Local"
         )
         syncAndCheck(param)
     }

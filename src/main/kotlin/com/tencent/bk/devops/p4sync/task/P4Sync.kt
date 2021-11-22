@@ -162,9 +162,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val configFilePath = Paths.get(p4root, P4_CONFIG_FILE_NAME)
         val outputStream = Files.newOutputStream(configFilePath)
         val printWriter = PrintWriter(outputStream)
-        printWriter.println("$P4_USER=$p4user")
-        printWriter.println("$P4_PORT=$uri")
-        printWriter.print("$P4_CLIENT=${client.name}")
-        logger.info("保存工作空间配置文件${configFilePath.toFile().canonicalPath}成功")
+        printWriter.use {
+            printWriter.println("$P4_USER=$p4user")
+            printWriter.println("$P4_PORT=$uri")
+            printWriter.print("$P4_CLIENT=${client.name}")
+            logger.info("保存工作空间配置文件${configFilePath.toFile().canonicalPath}成功")
+        }
     }
 }
