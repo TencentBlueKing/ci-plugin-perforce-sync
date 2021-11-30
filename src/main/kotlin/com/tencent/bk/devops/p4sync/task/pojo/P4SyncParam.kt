@@ -49,7 +49,7 @@ class P4SyncParam(
      * Defines the line end options available for text files.
      * */
     @JsonProperty("lineEnd")
-    val lineEnd: String? = IClientSummary.ClientLineEnd.LOCAL.toString(),
+    val lineEnd: String = IClientSummary.ClientLineEnd.LOCAL.toString(),
 
     /**
      * client options
@@ -173,7 +173,7 @@ class P4SyncParam(
             root = rootPath, mappings = view?.lines(),
             stream = stream,
             lineEnd = IClientSummary.ClientLineEnd.getValue(lineEnd)
-                ?: throw IllegalArgumentException("Must enum of: LOCAL,UNIX,MAC,WIN,SHARE"),
+                ?: throw IllegalArgumentException("LineEnd [$lineEnd] Must enum of: LOCAL,UNIX,MAC,WIN,SHARE"),
             options = ClientOptions(
                 allWrite, clobber,
                 compress, locked, modtime, rmdir
