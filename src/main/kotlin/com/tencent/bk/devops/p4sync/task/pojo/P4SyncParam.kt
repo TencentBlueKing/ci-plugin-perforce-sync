@@ -167,10 +167,11 @@ class P4SyncParam(
 ) : AtomBaseParam() {
 
     private fun getWorkspace(): Workspace {
-        Files.createDirectories(Paths.get(rootPath))
+        val clientRootPath = Paths.get(bkWorkspace).resolve(rootPath)
+        Files.createDirectories(clientRootPath)
         return Workspace(
             name = clientName, description = "create by p4sync",
-            root = rootPath, mappings = view?.lines(),
+            root = clientRootPath.toString(), mappings = view?.lines(),
             stream = stream,
             lineEnd = if (lineEnd == null) IClientSummary.ClientLineEnd.LOCAL
             else IClientSummary.ClientLineEnd.getValue(lineEnd)
