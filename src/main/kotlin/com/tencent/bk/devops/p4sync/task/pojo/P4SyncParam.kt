@@ -7,6 +7,7 @@ import com.perforce.p4java.impl.generic.client.ClientOptions
 import com.tencent.bk.devops.atom.pojo.AtomBaseParam
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
+import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -165,10 +166,11 @@ class P4SyncParam(
     val unshelveId: Int? = null
 
 ) : AtomBaseParam() {
-
+    private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
     private fun getWorkspace(): Workspace {
         val clientRootPath = Paths.get(bkWorkspace).resolve(rootPath)
         Files.createDirectories(clientRootPath)
+        logger.info("构建机工作空间：$bkWorkspace")
         return Workspace(
             name = clientName, description = "create by p4sync",
             root = clientRootPath.toString(), mappings = view?.lines(),
