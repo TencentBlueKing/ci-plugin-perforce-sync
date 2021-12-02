@@ -17,6 +17,17 @@
       "hidden": false,
       "isSensitive": false
     },
+    "proxy_flag": {
+      "text": "使用代理",
+      "default": false,
+      "desc": "",
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
+
     "httpProxy": {
       "label": "HTTP代理地址",
       "placeholder": "如: devnet-proxy.oa.com:8080",
@@ -25,7 +36,14 @@
       "required": false,
       "disabled": false,
       "hidden": false,
-      "isSensitive": false
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "proxy_flag",
+          "value": true
+        }]
+      }
     },
     "ticketId": {
       "label": "用户凭证",
@@ -48,11 +66,11 @@
       }
     },
     "rootPath": {
-      "label": "工作空间根目录",
-      "placeholder": "如/data/workspace",
+      "label": "文件保存路径",
+      "placeholder": "请填写工作空间相对目录，不填则默认为工作空间根目录",
       "type": "vuex-input",
-      "desc": "",
-      "required": true,
+      "desc": "当前流水线存在多个文件拉取插件，你需设置此字段以解决冲突问题",
+      "required": false,
       "disabled": false,
       "hidden": false,
       "isSensitive": false
@@ -67,15 +85,57 @@
       "hidden": false,
       "isSensitive": false
     },
+    "depotMode": {
+      "label": "",
+      "default": "Stream",
+      "type": "enum-input",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "list": [{
+        "label": "Stream",
+        "value": "Stream"
+      },
+        {
+          "label": "经典",
+          "value": "CALSSICS"
+        }
+      ]
+    },
     "stream": {
       "label": "Stream",
       "placeholder": "如：//JamCode/main",
       "type": "vuex-input",
       "desc": "",
-      "required": false,
+      "required": true,
       "disabled": false,
       "hidden": false,
-      "isSensitive": false
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "depotMode",
+          "value": "Stream"
+        }]
+      }
+    },
+    "view": {
+      "label": "工作空间视图",
+      "placeholder": "可不填，非stream仓库时选择。\n//depot/...     //workspace/...\n//depot/dir/... //workspace/dir2/...",
+      "type": "vuex-textarea",
+      "desc": "仓库和工作空间映射关系,",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "depotMode",
+          "value": "CALSSICS"
+        }]
+      }
     },
     "unshelveId": {
       "label": "unshelveId",
@@ -92,16 +152,6 @@
       "placeholder": "如: file.c#4 、 //depot/proj1/...@21等等",
       "type": "vuex-input",
       "desc": "不填则同步所有文件,支持p4的FileSpec和RevSpec",
-      "required": false,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": false
-    },
-    "view": {
-      "label": "工作空间视图",
-      "placeholder": "可不填，非stream仓库时选择。\n//depot/...     //ws/...\n//depot/dir/... //ws/dir2/...",
-      "type": "vuex-textarea",
-      "desc": "仓库和工作空间映射关系,",
       "required": false,
       "disabled": false,
       "hidden": false,
