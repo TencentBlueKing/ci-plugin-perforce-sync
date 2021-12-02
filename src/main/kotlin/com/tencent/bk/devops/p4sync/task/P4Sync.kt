@@ -77,12 +77,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
             )
             p4client.use {
                 val client = param.getClient(p4client)
-                if (client.root != param.rootPath) {
-                    throw RuntimeException(
-                        "该工作空间已存在，但是当前文件保存路径不是该工作空间之前设置的文件保存路径，" +
-                            "请修改工作空间名称或者修改文件保存路径为${client.root}。"
-                    )
-                }
                 val syncOptions = MoreSyncOptions(
                     forceUpdate, noUpdate, clientBypass,
                     serverBypass, quiet, safetyCheck, max
