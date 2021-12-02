@@ -376,7 +376,7 @@
   "inputGroups": [{
     "name": "fileOptions",
     "label": "文件选项",
-    "isExpanded": true
+    "isExpanded": false
   }, {
     "name": "syncOptions",
     "label": "同步选项",
