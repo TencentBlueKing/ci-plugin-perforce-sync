@@ -94,6 +94,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 }
                 // unshelve
                 unshelveId?.let {
+                    logger.info("start unshelve id $unshelveId.")
                     logSyncResults(p4client.unshelve(unshelveId, client), UN_SHELVE)
                 }
                 // 保存client信息
