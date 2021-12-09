@@ -121,7 +121,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         with(param) {
             // 检查输出路径
             try {
-                checkPathWriteAbility(rootPath)
+                rootPath?.let { checkPathWriteAbility(rootPath) }
             } catch (e: Exception) {
                 result.status = Status.failure
                 result.message = "同步的文件输出路径不可用: ${e.message}"

@@ -99,7 +99,7 @@ class P4SyncParam(
      * 未指定clientName时生效
      * */
     @JsonProperty("rootPath")
-    val rootPath: String,
+    val rootPath: String? = null,
     /**
      * 强制更新 -f
      * */
@@ -168,7 +168,8 @@ class P4SyncParam(
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
     private fun getWorkspace(): Workspace {
-        val clientRootPath = Paths.get(bkWorkspace, rootPath)
+        val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
+        else Paths.get(bkWorkspace, rootPath)
         Files.createDirectories(clientRootPath)
         logger.info("构建机工作空间：$bkWorkspace")
         return Workspace(
