@@ -172,5 +172,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
             printWriter.print("$P4_CLIENT=${client.name}")
             logger.info("保存工作空间配置文件${configFilePath.toFile().canonicalPath}成功")
         }
+        configFilePath.toFile().setReadOnly()
     }
 }
