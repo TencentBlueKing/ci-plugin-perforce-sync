@@ -9,5 +9,6 @@ data class Workspace(
     val stream: String? = null,
     val mappings: List<String>?,
     val lineEnd: IClientSummary.ClientLineEnd,
-    val options: IClientSummary.IClientOptions
+    val options: IClientSummary.IClientOptions,
+    val charsetName: String
 )

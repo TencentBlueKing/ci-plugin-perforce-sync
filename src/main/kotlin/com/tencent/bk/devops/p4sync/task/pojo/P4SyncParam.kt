@@ -163,7 +163,9 @@ class P4SyncParam(
     @JsonProperty("numberOfThreads")
     val numberOfThreads: Int = 0,
     @JsonProperty("unshelveId")
-    val unshelveId: Int? = null
+    val unshelveId: Int? = null,
+    @JsonProperty("charsetName")
+    val charsetName: String = "none"
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
@@ -182,7 +184,8 @@ class P4SyncParam(
             options = ClientOptions(
                 allWrite, clobber,
                 compress, locked, modtime, rmdir
-            )
+            ),
+            charsetName = charsetName
         )
     }
 

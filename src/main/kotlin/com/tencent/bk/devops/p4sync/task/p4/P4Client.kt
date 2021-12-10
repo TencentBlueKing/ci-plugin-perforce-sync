@@ -22,14 +22,17 @@ import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import org.apache.commons.lang3.ArrayUtils
+import org.slf4j.LoggerFactory
 
 class P4Client(
     // p4java://localhost:1666"
     val uri: String,
     val userName: String,
-    val password: String? = null
+    val password: String? = null,
+    charsetName: String
 ) : AutoCloseable {
     private val server: IOptionsServer = getOptionsServer(uri, null)
+    private val logger = LoggerFactory.getLogger(P4Client::class.java)
 
     init {
         server.userName = userName
@@ -52,6 +55,7 @@ class P4Client(
         if (!server.loginStatus.contains("ticket expires")) {
             throw AccessException("登录凭证错误，认证失败！")
         }
+        setCharset(charsetName)
     }
 
     fun sync(
@@ -186,6 +190,14 @@ class P4Client(
             id, null,
             0, false, false
         )
+    }
+
+    fun setCharset(charsetName: String) {
+        if (server.supportsUnicode()) {
+            server.charsetName = charsetName
+        } else {
+            logger.info("Server not supports unicode,charset $charsetName was ignore.")
+        }
     }
 
     override fun close() {

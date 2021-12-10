@@ -6,6 +6,7 @@ import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.impl.mapbased.rpc.stream.helper.RpcSocketHelper
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.option.client.SyncOptions
+import com.perforce.p4java.server.PerforceCharsets
 import com.tencent.bk.devops.atom.AtomContext
 import com.tencent.bk.devops.atom.common.Status
 import com.tencent.bk.devops.atom.pojo.AtomResult
@@ -73,7 +74,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
             val p4client = P4Client(
                 uri = if (useSSL) "p4javassl://${param.p4port.substring(4)}" else "p4java://${param.p4port}",
                 userName = userName,
-                password = credential
+                password = credential,
+                charsetName
             )
             p4client.use {
                 val client = param.getClient(p4client)
@@ -118,7 +120,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         return syncs
     }
 
-    fun checkParam(param: P4SyncParam, result: AtomResult) {
+    private fun checkParam(param: P4SyncParam, result: AtomResult) {
         with(param) {
             // 检查输出路径
             try {
@@ -126,6 +128,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
             } catch (e: Exception) {
                 result.status = Status.failure
                 result.message = "同步的文件输出路径不可用: ${e.message}"
+            }
+            if (!PerforceCharsets.isSupported(charsetName)) {
+                result.status = Status.failure
+                result.message = "Charset $charsetName not supported."
             }
         }
     }
