@@ -318,7 +318,7 @@
     },
     "clobber": {
       "text": "Clobber",
-      "default": false,
+      "default": true,
       "desc": "Specifies whether p4 sync overwrites writable but unopened workspace files. (By default, Helix server does not overwrite unopened files if they are writable.)",
       "type": "atom-checkbox",
       "required": false,
