@@ -202,4 +202,11 @@ class P4SyncParam(
         }
         return client
     }
+
+    fun getFileSpecList(): List<String> {
+        fileRevSpec?.let {
+            return fileRevSpec.lines()
+        }
+        return emptyList()
+    }
 }

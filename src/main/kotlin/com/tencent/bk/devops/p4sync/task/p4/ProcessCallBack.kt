@@ -61,6 +61,7 @@ class ProcessCallBack : IProgressCallback {
         tickMarker.lines().first { it.startsWith(totalFileCountPrefix) }.let {
             val totalStr = it.split(" ").last()
             total = totalStr.toInt()
+            process = 0
         }
     }
 

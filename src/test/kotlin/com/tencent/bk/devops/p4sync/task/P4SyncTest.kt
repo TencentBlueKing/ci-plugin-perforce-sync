@@ -109,6 +109,23 @@ class P4SyncTest {
         syncAndCheck(param)
     }
 
+    @DisplayName("同步多个文件版本")
+    @Test
+    fun syncByFileSpecList() {
+        val param = P4SyncParam(
+            p4port = p4port,
+            clientName = clientName,
+            rootPath = "dev",
+            stream = stream,
+            charsetName = "utf8",
+            fileRevSpec = "bug.txt#5\nhello.txt#7"
+//            forceUpdate = true,
+//            unshelveId = 25
+        )
+        param.bkWorkspace = rootPath
+        syncAndCheck(param)
+    }
+
     private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
         val credential = ticket ?: password

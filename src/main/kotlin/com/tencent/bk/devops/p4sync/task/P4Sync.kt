@@ -90,7 +90,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     batch, batchSize, minimum,
                     minimumSize, numberOfThreads, null
                 )
-                val fileSpecs = FileSpecBuilder.makeFileSpecList(fileRevSpec)
+                val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
                 p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs)
                 // unshelve
                 unshelveId?.let {

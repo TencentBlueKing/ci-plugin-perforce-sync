@@ -312,9 +312,9 @@
     },
     "fileRevSpec": {
       "label": "同步文件版本",
-      "placeholder": "如: file.c#4 、 //depot/proj1/...@21等等",
-      "type": "vuex-input",
-      "desc": "不填则同步所有文件,支持p4的FileSpec和RevSpec",
+      "placeholder": "file.c#4 \n//depot/proj1/...@21",
+      "type": "vuex-textarea",
+      "desc": "不填则同步所有文件,支持p4的FileSpec和RevSpec，每行一个版本信息",
       "required": false,
       "disabled": false,
       "hidden": false,
