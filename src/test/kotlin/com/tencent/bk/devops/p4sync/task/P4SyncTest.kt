@@ -2,7 +2,6 @@ package com.tencent.bk.devops.p4sync.task
 
 import com.tencent.bk.devops.atom.common.Status
 import com.tencent.bk.devops.atom.pojo.AtomResult
-import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -17,13 +16,13 @@ import java.nio.file.attribute.BasicFileAttributes
 
 class P4SyncTest {
 
-    val p4port = ""
-    val userName = "root"
-    val password = ""
+    val p4port = System.getProperty("P4PORT")
+    val userName = System.getProperty("P4USER")
+    val password = System.getProperty("P4PWD")
     val ticket = ""
-    val clientName = "felix_pc_test"
-    val stream = "//Test/main"
-    val rootPath = System.getProperty("java.io.tmpdir").plus("tmp")
+    val clientName = System.getProperty("P4CLIENT")
+    val stream = "//Test/dev"
+    val rootPath = System.getProperty("java.io.tmpdir").plus("tmp").plus("ut")
 
     private val p4Sync = P4Sync()
 
@@ -33,18 +32,22 @@ class P4SyncTest {
     @AfterEach
     fun afterEach() {
         toCleans.forEach { cleanDir(it) }
-        P4Client("p4java://$p4port", userName, password).deleteClient(clientName, true)
+//        P4Client("p4java://$p4port", userName, password).deleteClient(clientName, true)
     }
+
     @DisplayName("使用stream同步仓库")
     @Test
     fun syncByStream() {
         val param = P4SyncParam(
             p4port = p4port,
             clientName = clientName,
-            rootPath = rootPath,
+            rootPath = "dev",
             stream = stream,
-            forceUpdate = true
+            charsetName = "utf8",
+//            forceUpdate = true,
+//            unshelveId = 25
         )
+        param.bkWorkspace = rootPath
         syncAndCheck(param)
     }
 
@@ -55,7 +58,7 @@ class P4SyncTest {
             p4port = p4port,
             clientName = clientName,
             rootPath = rootPath,
-            forceUpdate = true,
+//            forceUpdate = true,
             view = "//demo/... //$clientName/demo/...\n" +
                 "//depot/... //$clientName/depot/..."
         )

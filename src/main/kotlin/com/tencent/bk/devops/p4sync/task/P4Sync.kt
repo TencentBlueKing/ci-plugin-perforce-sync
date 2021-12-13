@@ -177,7 +177,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     private fun logPreChange(client: IClient) {
         val changesFilePath = getChangesLogPath(client)
-        val reader = BufferedReader(FileReader(changesFilePath.toFile()))
+        val file = changesFilePath.toFile()
+        if (!file.exists()) {
+            return
+        }
+        val reader = BufferedReader(FileReader(file))
         reader.lines().forEach {
             logger.info("Pre sync change: $it.")
         }
