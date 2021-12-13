@@ -2,10 +2,8 @@ package com.tencent.bk.devops.p4sync.task
 
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.core.file.FileSpecBuilder
-import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.impl.mapbased.rpc.stream.helper.RpcSocketHelper
 import com.perforce.p4java.option.client.ParallelSyncOptions
-import com.perforce.p4java.option.client.SyncOptions
 import com.perforce.p4java.server.PerforceCharsets
 import com.tencent.bk.devops.atom.AtomContext
 import com.tencent.bk.devops.atom.common.Status
@@ -16,8 +14,6 @@ import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
 import com.tencent.bk.devops.p4sync.task.constants.P4_USER
-import com.tencent.bk.devops.p4sync.task.constants.SYNC
-import com.tencent.bk.devops.p4sync.task.constants.UN_SHELVE
 import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
@@ -87,37 +83,17 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     batch, batchSize, minimum,
                     minimumSize, numberOfThreads, null
                 )
-                if (fileRevSpec != null) {
-                    val fileSpecs = FileSpecBuilder.makeFileSpecList(fileRevSpec)
-                    logSync(p4client, client, fileSpecs, syncOptions, parallelSyncOptions)
-                } else {
-                    // 同步所有文件
-                    logSync(p4client, client, null, syncOptions, parallelSyncOptions)
-                }
+                val fileSpecs = FileSpecBuilder.makeFileSpecList(fileRevSpec)
+                p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs)
                 // unshelve
                 unshelveId?.let {
-                    logger.info("start unshelve id $unshelveId.")
-                    logSyncResults(p4client.unshelve(unshelveId, client), UN_SHELVE)
+                    logger.info("unshelve id $unshelveId.")
+                    p4client.unshelve(unshelveId, client)
                 }
                 // 保存client信息
                 save(client, p4port)
             }
         }
-    }
-
-    private fun logSync(
-        p4client: P4Client,
-        client: IClient,
-        fileSpecs: MutableList<IFileSpec>?,
-        syncOptions: SyncOptions,
-        parallelSyncOptions: ParallelSyncOptions
-    ): List<IFileSpec> {
-        val syncs = p4client.sync(
-            client,
-            syncOptions, parallelSyncOptions, fileSpecs?.toList()
-        )
-        syncs.run { logSyncResults(this) }
-        return syncs
     }
 
     private fun checkParam(param: P4SyncParam, result: AtomResult) {
@@ -146,25 +122,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
             }
         }
         Files.delete(tmpFile)
-    }
-
-    private fun logSyncResults(fileSpecs: List<IFileSpec>, action: String = SYNC) {
-        if (fileSpecs.size == 1 && fileSpecs.first().clientPath == null && action != UN_SHELVE) {
-            // -q的情况下msg可能为null
-            var msg = fileSpecs.first().toString() ?: return
-            if (msg.contains("up-to-date")) {
-                msg = msg.replace("ERROR: ", "")
-            }
-            logger.info(msg)
-            return
-        }
-        fileSpecs.forEach {
-            if (it.clientPath != null) {
-                logger.info("同步文件[$it]到${it.clientPath}")
-            } else {
-                logger.info("文件[$it]-unshelved")
-            }
-        }
     }
 
     private fun save(client: IClient, uri: String) {

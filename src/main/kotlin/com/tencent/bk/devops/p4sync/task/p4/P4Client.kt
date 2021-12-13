@@ -22,6 +22,7 @@ import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
+import com.tencent.bk.devops.p4sync.task.constants.SYNC
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 
@@ -34,6 +35,7 @@ class P4Client(
 ) : AutoCloseable {
     private val server: IOptionsServer = getOptionsServer(uri, null)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
+    private var processKey: Int
 
     init {
         server.userName = userName
@@ -57,6 +59,8 @@ class P4Client(
             throw AccessException("登录凭证错误，认证失败！")
         }
         setCharset(charsetName)
+        server.registerProgressCallback(ProcessCallBack())
+        processKey = 3
     }
 
     fun sync(
@@ -65,6 +69,8 @@ class P4Client(
         parallelSyncOptions: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?
     ): List<IFileSpec> {
+        processKey++
+        ProcessCallBack.addKey(processKey, ProcessCallBack.SYNC)
         setClient(client)
         if (parallelSyncOptions.needParallel()) {
             return client.syncParallel2(fileSpecs = fileSpecs, syncOpts = syncOptions, pSyncOpts = parallelSyncOptions)
@@ -140,10 +146,13 @@ class P4Client(
     }
 
     fun getClient(clientName: String): IClient? {
+        processKey++
         return server.getClient(clientName)
     }
 
     fun createClient(workspace: Workspace): IClient {
+        processKey++
+        ProcessCallBack.addKey(processKey, ProcessCallBack.CREATE_CLIENT)
         val client = buildClient(workspace)
         server.createClient(client)
         return client
@@ -187,6 +196,8 @@ class P4Client(
     }
 
     fun unshelve(id: Int, client: IClient): List<IFileSpec> {
+        processKey++
+        ProcessCallBack.addKey(processKey, ProcessCallBack.UNSHELVE)
         return client.unshelveChangelist(
             id, null,
             0, false, false
@@ -195,6 +206,7 @@ class P4Client(
 
     fun setCharset(charsetName: String) {
         if (server.supportsUnicode()) {
+            logger.info("Connection use Charset $charsetName.")
             server.charsetName = charsetName
         } else {
             logger.info("Server not supports unicode,charset $charsetName was ignore.")

@@ -174,7 +174,7 @@ class P4SyncParam(
         val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
         else Paths.get(bkWorkspace, rootPath)
         Files.createDirectories(clientRootPath)
-        logger.info("构建机工作空间：$bkWorkspace")
+        logger.info("文件保存路径：$clientRootPath")
         return Workspace(
             name = clientName, description = "create by p4sync",
             root = clientRootPath.toString(), mappings = view?.lines(),
