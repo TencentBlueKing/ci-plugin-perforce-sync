@@ -21,6 +21,7 @@ import com.perforce.p4java.server.IOptionsServer
 import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
+import com.tencent.bk.devops.p4sync.task.constants.NONE
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 
@@ -29,7 +30,7 @@ class P4Client(
     val uri: String,
     val userName: String,
     val password: String? = null,
-    charsetName: String
+    charsetName: String = NONE
 ) : AutoCloseable {
     private val server: IOptionsServer = getOptionsServer(uri, null)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)

@@ -5,6 +5,7 @@ import com.perforce.p4java.client.IClient
 import com.perforce.p4java.client.IClientSummary
 import com.perforce.p4java.impl.generic.client.ClientOptions
 import com.tencent.bk.devops.atom.pojo.AtomBaseParam
+import com.tencent.bk.devops.p4sync.task.constants.NONE
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
 import org.slf4j.LoggerFactory
@@ -165,7 +166,7 @@ class P4SyncParam(
     @JsonProperty("unshelveId")
     val unshelveId: Int? = null,
     @JsonProperty("charsetName")
-    val charsetName: String = "none"
+    val charsetName: String = NONE
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
