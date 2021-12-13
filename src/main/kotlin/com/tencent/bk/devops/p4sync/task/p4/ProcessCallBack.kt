@@ -18,6 +18,9 @@ class ProcessCallBack : IProgressCallback {
     }
 
     override fun tick(key: Int, tickMarker: String?): Boolean {
+        if (ignoreTask(key)) {
+            return true
+        }
         tickMarker?.let {
             val msg = totalSizeReadable(tickMarker) ?: tickMarker
             msg.lines().filter { it.isNotEmpty() }.forEach {

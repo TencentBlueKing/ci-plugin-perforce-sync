@@ -2,6 +2,7 @@ package com.tencent.bk.devops.p4sync.task.p4
 
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.client.IClientViewMapping
+import com.perforce.p4java.core.IChangelistSummary
 import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.exception.AccessException
 import com.perforce.p4java.exception.RequestException
@@ -15,6 +16,7 @@ import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.option.client.SyncOptions
 import com.perforce.p4java.option.server.DeleteClientOptions
+import com.perforce.p4java.option.server.GetChangelistsOptions
 import com.perforce.p4java.option.server.TrustOptions
 import com.perforce.p4java.server.CmdSpec
 import com.perforce.p4java.server.IOptionsServer
@@ -211,6 +213,12 @@ class P4Client(
         } else {
             logger.info("Server not supports unicode,charset $charsetName was ignore.")
         }
+    }
+
+    fun getChangeList(max: Int): List<IChangelistSummary> {
+        val ops = GetChangelistsOptions()
+        ops.maxMostRecent = max
+        return server.getChangelists(null, ops)
     }
 
     override fun close() {
