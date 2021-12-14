@@ -22,6 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package com.perforce.p4java.impl.mapbased.rpc.stream.helper;
 
 import java.io.IOException;
@@ -119,7 +120,8 @@ public class RpcSocketHelper {
 
         if (secure) {
             if (httpProxyHost != null) {
-                Socket proxySocket = new Socket(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(httpProxyHost, httpProxyPort)));
+                Socket proxySocket = new Socket(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress(httpProxyHost, httpProxyPort)));
                 configureSocket(proxySocket, properties);
 
                 proxySocket.bind(new InetSocketAddress(0));

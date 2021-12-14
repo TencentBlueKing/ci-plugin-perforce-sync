@@ -18,7 +18,7 @@ object CredentialUtils {
 
     fun getCredentialWithType(credentialId: String, showErrorLog: Boolean = true): Pair<List<String>, CredentialType> {
         if (credentialId.trim().isEmpty()) {
-            throw RuntimeException("The credential Id is empty")
+            throw IllegalArgumentException("The credential Id is empty")
         }
         try {
             val pair = DHUtil.initKey()
@@ -27,7 +27,7 @@ object CredentialUtils {
             val result = CredentialResourceApi().get(credentialId, encoder.encodeToString(pair.publicKey))
             if (result.isNotOk() || result.data == null) {
                 logger.error("Fail to get the credential($credentialId) because of ${result.message}")
-                throw RuntimeException(result.message!!)
+                throw IllegalArgumentException(result.message!!)
             }
 
             val credential = result.data!!

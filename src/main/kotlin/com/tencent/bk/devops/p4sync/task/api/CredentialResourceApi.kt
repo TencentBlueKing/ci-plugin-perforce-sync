@@ -14,7 +14,7 @@ class CredentialResourceApi : BaseApi() {
             val responseContent = request(request, "获取凭据失败")
             return JsonUtil.to(responseContent, object : TypeReference<Result<CredentialInfo>>() {})
         } catch (e: Throwable) {
-            throw RuntimeException(e.message)
+            throw IllegalArgumentException(e.message)
         }
     }
 }
