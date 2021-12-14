@@ -1,6 +1,7 @@
 package com.tencent.bk.devops.p4sync.task.util
 
 import com.tencent.bk.devops.p4sync.task.pojo.util.DHKeyPair
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
@@ -13,7 +14,6 @@ import javax.crypto.KeyAgreement
 import javax.crypto.interfaces.DHPublicKey
 import javax.crypto.spec.DHParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 /**
  * Created by Aaron Sheng on 2017/9/29.
@@ -23,6 +23,7 @@ object DHUtil {
     private val KEY_ALGORITHM = "DH"
     private val KEY_PROVIDER = "BC"
     private val SECRECT_ALGORITHM = "DES"
+
     // private val KEY_SIZE = 1024
     private val p = BigInteger("16560215747140417249215968347342080587", 16)
     private val g = BigInteger("1234567890", 16)

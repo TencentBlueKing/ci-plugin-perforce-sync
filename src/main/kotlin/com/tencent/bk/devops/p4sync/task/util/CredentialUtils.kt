@@ -2,9 +2,9 @@ package com.tencent.bk.devops.p4sync.task.util
 
 import com.tencent.bk.devops.p4sync.task.api.CredentialResourceApi
 import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
+import org.slf4j.LoggerFactory
 import java.util.Base64
 import kotlin.collections.ArrayList
-import org.slf4j.LoggerFactory
 
 /**
  * This util is to get the credential from core

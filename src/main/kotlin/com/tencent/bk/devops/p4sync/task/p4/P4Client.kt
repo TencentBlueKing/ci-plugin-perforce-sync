@@ -24,7 +24,6 @@ import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
-import com.tencent.bk.devops.p4sync.task.constants.SYNC
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 
@@ -138,9 +137,8 @@ class P4Client(
 
         val syncOptions =
             Parameters.processParameters(syncOpts, fileSpecs, serverImpl)
-        val po = arrayOf(parallelOptionsBuilder.toString())
-
-        return ArrayUtils.addAll(po, *syncOptions)
+        val parallelOptions = parallelOptionsBuilder.toString()
+        return ArrayUtils.addAll(syncOptions, parallelOptions)
     }
 
     private fun ParallelSyncOptions.needParallel(): Boolean {
@@ -207,7 +205,7 @@ class P4Client(
     }
 
     fun setCharset(charsetName: String) {
-        if (server.supportsUnicode()) {
+        if (server.supportsUnicode() && charsetName != NONE) {
             logger.info("Connection use Charset $charsetName.")
             server.charsetName = charsetName
         } else {

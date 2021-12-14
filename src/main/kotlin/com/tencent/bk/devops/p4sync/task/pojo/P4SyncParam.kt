@@ -195,7 +195,7 @@ class P4SyncParam(
         val client = p4Client.getClient(clientName)
             ?: p4Client.createClient(workspace)
         if (client.root != workspace.root) {
-            throw RuntimeException(
+            throw IllegalArgumentException(
                 "该工作空间已存在，但是当前文件保存路径不是该工作空间之前设置的文件保存路径，" +
                     "请修改工作空间名称或者修改文件保存路径为${client.root}。注意此路径为绝对路径，请根据构建机工作空间更改。"
             )

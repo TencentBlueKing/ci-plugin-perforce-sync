@@ -71,7 +71,7 @@ class P4SyncTest {
         val param = P4SyncParam(
             p4port = p4port,
             clientName = clientName,
-            rootPath = rootPath,
+            rootPath = "dev",
             forceUpdate = true,
             stream = stream,
             noUpdate = true,
@@ -93,6 +93,7 @@ class P4SyncTest {
             rmdir = true,
             lineEnd = "Local"
         )
+        param.bkWorkspace = rootPath
         syncAndCheck(param)
     }
 
