@@ -38,8 +38,10 @@ class P4Client(
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
     private var processKey: Int
 
-    // p4发送命令的次数，与RpcServer的nextCmdCallBackKey对应，用于process callback的命令转换
-    private val initProcessKey = 3
+    companion object {
+        // p4发送命令的次数，与RpcServer的nextCmdCallBackKey对应，用于process callback的命令转换
+        const val INIT_PROCESS_KEY = 3
+    }
 
     init {
         server.userName = userName
@@ -64,7 +66,7 @@ class P4Client(
         }
         setCharset(charsetName)
         server.registerProgressCallback(ProcessCallBack())
-        processKey = initProcessKey
+        processKey = INIT_PROCESS_KEY
     }
 
     fun sync(
