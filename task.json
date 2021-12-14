@@ -29,7 +29,7 @@
     },
     "httpProxy": {
       "label": "HTTP代理地址",
-      "placeholder": "如: devnet-proxy.oa.com:8080",
+      "placeholder": "",
       "type": "vuex-input",
       "desc": "HTTP代理地址",
       "required": false,
