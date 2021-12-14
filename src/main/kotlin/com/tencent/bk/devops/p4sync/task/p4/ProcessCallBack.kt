@@ -25,8 +25,8 @@ class ProcessCallBack : IProgressCallback {
             val msg = totalSizeReadable(tickMarker) ?: tickMarker
             msg.lines().filter { it.isNotEmpty() }.forEach {
                 val taskName = taskName(key)
-                if (taskName == SYNC && !it.startsWith(totalFileCountPrefix) &&
-                    !it.startsWith(totalFileSizePrefix) &&
+                if (taskName == SYNC &&
+                    !isCountPrefixString(it) &&
                     total > 0
                 ) {
                     logger.info("Task $taskName ${++process}/$total: $it")
@@ -43,6 +43,11 @@ class ProcessCallBack : IProgressCallback {
             return
         }
         logger.info("Stop task ${taskName(key)}")
+    }
+
+    private fun isCountPrefixString(tickMarker: String): Boolean {
+        return tickMarker.startsWith(totalFileCountPrefix) ||
+            tickMarker.startsWith(totalFileSizePrefix)
     }
 
     private fun totalSizeReadable(tickMarker: String): String? {
