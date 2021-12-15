@@ -12,3 +12,5 @@ gradle/
 gradlew
 gradlew.bat
 version.txt
+.codecc
+/build.yml
