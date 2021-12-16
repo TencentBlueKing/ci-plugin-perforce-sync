@@ -26,6 +26,7 @@ import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
+import java.net.InetAddress
 
 class P4Client(
     // p4java://localhost:1666"
@@ -174,6 +175,7 @@ class P4Client(
             summary.setServer(server)
             summary.stream = stream
             summary.ownerName = server.userName
+            summary.hostName = InetAddress.getLocalHost().hostName
             val client = Client(summary, server, false)
             // 非流仓库时，使用ws view
             if (stream == null && mappings != null) {
