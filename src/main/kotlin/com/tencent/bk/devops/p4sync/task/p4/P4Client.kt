@@ -2,6 +2,7 @@ package com.tencent.bk.devops.p4sync.task.p4
 
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.client.IClientViewMapping
+import com.perforce.p4java.core.IChangelist
 import com.perforce.p4java.core.IChangelistSummary
 import com.perforce.p4java.core.file.FileSpecBuilder
 import com.perforce.p4java.core.file.IFileSpec
@@ -13,10 +14,10 @@ import com.perforce.p4java.impl.mapbased.client.Client
 import com.perforce.p4java.impl.mapbased.client.ClientSummary
 import com.perforce.p4java.impl.mapbased.server.Parameters
 import com.perforce.p4java.impl.mapbased.server.Server
-import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.option.client.ReconcileFilesOptions
 import com.perforce.p4java.option.client.SyncOptions
+import com.perforce.p4java.option.client.UnshelveFilesOptions
 import com.perforce.p4java.option.server.DeleteClientOptions
 import com.perforce.p4java.option.server.GetChangelistsOptions
 import com.perforce.p4java.option.server.TrustOptions
@@ -27,6 +28,8 @@ import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
 import com.tencent.bk.devops.p4sync.task.p4.callback.ReconcileStreamCallback
+import com.tencent.bk.devops.p4sync.task.p4.callback.SyncStreamCallback
+import com.tencent.bk.devops.p4sync.task.p4.callback.UnshelveStreamCallback
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
@@ -40,7 +43,6 @@ class P4Client(
 ) : AutoCloseable {
     private val server: IOptionsServer = getOptionsServer(uri, null)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
-    private var processKey: Int
 
     companion object {
         // p4发送命令的次数，与RpcServer的nextCmdCallBackKey对应，用于process callback的命令转换
@@ -69,8 +71,6 @@ class P4Client(
             throw AccessException("登录凭证错误，认证失败！")
         }
         setCharset(charsetName)
-        server.registerProgressCallback(ProcessCallBack())
-        processKey = INIT_PROCESS_KEY
     }
 
     fun sync(
@@ -78,24 +78,26 @@ class P4Client(
         syncOptions: SyncOptions,
         parallelSyncOptions: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?
-    ): List<IFileSpec> {
-        processKey++
-        ProcessCallBack.addKey(processKey, ProcessCallBack.SYNC)
+    ) {
         setClient(client)
+        val callback = SyncStreamCallback(client.server)
         if (parallelSyncOptions.needParallel()) {
-            return client.syncParallel2(fileSpecs = fileSpecs, syncOpts = syncOptions, pSyncOpts = parallelSyncOptions)
-                .toList()
+            client.syncParallel2(
+                fileSpecs = fileSpecs,
+                syncOpts = syncOptions,
+                pSyncOpts = parallelSyncOptions,
+                callback = callback
+            )
         }
-        return client.sync(fileSpecs, syncOptions).toList()
+        client.sync(fileSpecs, syncOptions, callback, 0)
     }
 
     private fun IClient.syncParallel2(
         syncOpts: SyncOptions,
         pSyncOpts: ParallelSyncOptions,
-        fileSpecs: List<IFileSpec>?
-    ): MutableList<IFileSpec> {
-        val specList: MutableList<IFileSpec> = ArrayList()
-
+        fileSpecs: List<IFileSpec>?,
+        callback: SyncStreamCallback
+    ) {
         if (server.currentClient == null ||
             !server.currentClient.name.equals(this.name, ignoreCase = true)
         ) {
@@ -107,15 +109,10 @@ class P4Client(
         val syncOptions =
             buildParallelOptions(serverImpl = server, fileSpecs = fileSpecs, syncOpts = syncOpts, pSyncOpts = pSyncOpts)
 
-        val resultMaps: List<Map<String, Any>> = (server as Server).execMapCmdList(
+        (server as Server).execStreamingMapCommand(
             CmdSpec.SYNC.toString(),
-            syncOptions, null, pSyncOpts.callback
+            syncOptions, null, callback, 0, pSyncOpts.callback
         )
-
-        for (map in resultMaps) {
-            specList.add(ResultListBuilder.handleFileReturn(map, server))
-        }
-        return specList
     }
 
     private fun buildParallelOptions(
@@ -155,15 +152,13 @@ class P4Client(
     }
 
     fun getClient(clientName: String): IClient? {
-        processKey++
         return server.getClient(clientName)
     }
 
     fun createClient(workspace: Workspace): IClient {
-        processKey++
-        ProcessCallBack.addKey(processKey, ProcessCallBack.CREATE_CLIENT)
         val client = buildClient(workspace)
-        server.createClient(client)
+        val result = server.createClient(client)
+        logger.info(result)
         return client
     }
 
@@ -205,12 +200,47 @@ class P4Client(
         return server.deleteClient(name, deleteClientOptions)
     }
 
-    fun unshelve(id: Int, client: IClient): List<IFileSpec> {
-        processKey++
-        ProcessCallBack.addKey(processKey, ProcessCallBack.UNSHELVE)
-        return client.unshelveChangelist(
+    fun unshelve(id: Int, client: IClient) {
+        val unshelveFilesOptions = UnshelveFilesOptions(false, false)
+        client.unshelveChangelist0(
             id, null,
-            0, false, false
+            0, unshelveFilesOptions
+        )
+    }
+
+    private fun IClient.unshelveChangelist0(
+        sourceChangelistId: Int,
+        fileSpecs: List<IFileSpec>?,
+        targetChangelistId: Int,
+        opts: UnshelveFilesOptions
+    ) {
+        if (sourceChangelistId <= 0) {
+            throw RequestException(
+                "Source changelist ID must be greater than zero"
+            )
+        }
+
+        val sourceChangelistString = "-s$sourceChangelistId"
+        var targetChangelistString: String? = null
+        if (targetChangelistId == IChangelist.DEFAULT) {
+            targetChangelistString = "-cdefault"
+        } else if (targetChangelistId > 0) {
+            targetChangelistString = "-c$targetChangelistId"
+        }
+
+        val serverImpl = server as Server
+        serverImpl.execStreamingMapCommand(
+            CmdSpec.UNSHELVE.toString(),
+            Parameters.processParameters(
+                opts,
+                fileSpecs,
+                arrayOf(
+                    sourceChangelistString,
+                    targetChangelistString
+                ),
+                serverImpl
+            ),
+            null, UnshelveStreamCallback(serverImpl), 0
         )
     }
 
@@ -226,12 +256,11 @@ class P4Client(
     fun getChangeList(max: Int): List<IChangelistSummary> {
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
+        ops.type = IChangelist.Type.SUBMITTED
         return server.getChangelists(null, ops)
     }
 
     fun cleanup(client: IClient) {
-        processKey++
-        ProcessCallBack.addKey(processKey, ProcessCallBack.AUTO_CLEANUP)
         val cleanupOpt = ReconcileFilesOptions()
         cleanupOpt.isUpdateWorkspace = true
         cleanupOpt.isUseWildcards = true

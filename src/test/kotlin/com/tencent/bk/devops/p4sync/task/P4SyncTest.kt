@@ -44,9 +44,9 @@ class P4SyncTest {
             rootPath = "dev",
             stream = stream,
             charsetName = "utf8",
-            autoCleanup = true
+            autoCleanup = true,
 //            forceUpdate = true,
-//            unshelveId = 25
+            unshelveId = 51
         )
         param.bkWorkspace = rootPath
         syncAndCheck(param)
