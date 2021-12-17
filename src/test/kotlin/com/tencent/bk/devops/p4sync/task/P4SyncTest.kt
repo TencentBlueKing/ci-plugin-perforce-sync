@@ -22,7 +22,7 @@ class P4SyncTest {
     val ticket = ""
     val clientName = System.getProperty("P4CLIENT")
     val stream = "//Test/dev"
-    val rootPath = System.getProperty("java.io.tmpdir").plus("tmp").plus("ut")
+    val rootPath = System.getProperty("java.io.tmpdir").plus("tmp").plus("ut3")
 
     private val p4Sync = P4Sync()
 

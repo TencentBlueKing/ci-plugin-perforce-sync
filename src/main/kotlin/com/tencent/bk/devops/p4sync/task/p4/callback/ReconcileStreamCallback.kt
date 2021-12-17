@@ -6,4 +6,8 @@ class ReconcileStreamCallback(server: IServer) : AbstractStreamCallback(server) 
     override fun taskName(): String {
         return "AUTO_CLEANUP"
     }
+
+    override fun normalMessages(): List<String> {
+        return listOf("no file(s) to reconcile")
+    }
 }

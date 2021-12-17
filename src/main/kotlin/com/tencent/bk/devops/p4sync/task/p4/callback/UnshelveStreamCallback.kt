@@ -7,10 +7,6 @@ class UnshelveStreamCallback(server: IServer) : AbstractStreamCallback(server) {
         return "UNSHELVE"
     }
 
-    override fun normalMessages(): List<String> {
-        return listOf("no file(s) to reconcile")
-    }
-
     override fun buildMessage(resultMap: Map<String, Any>): String {
         val depotFile = resultMap["depotFile"]
         val rev = resultMap["rev"]
