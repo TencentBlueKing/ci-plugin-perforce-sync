@@ -12,6 +12,7 @@ import com.tencent.bk.devops.atom.pojo.AtomResult
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
+import com.tencent.bk.devops.p4sync.task.constants.P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
@@ -102,7 +103,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 }
                 saveChanges(p4client, client)
                 // 保存client信息
-                save(client, p4port)
+                save(client, p4port, charsetName)
             }
         }
     }
@@ -135,7 +136,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         Files.delete(tmpFile)
     }
 
-    private fun save(client: IClient, uri: String) {
+    private fun save(client: IClient, uri: String, charsetName: String) {
         val p4user = client.server.userName
         val configFilePath = getP4ConfigPath(client)
         val outputStream = Files.newOutputStream(configFilePath)
@@ -143,7 +144,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
         printWriter.use {
             printWriter.println("$P4_USER=$p4user")
             printWriter.println("$P4_PORT=$uri")
-            printWriter.print("$P4_CLIENT=${client.name}")
+            printWriter.println("$P4_CLIENT=${client.name}")
+            if (client.server.supportsUnicode()) {
+                printWriter.println("$P4_CHARSET=$charsetName")
+            }
             logger.info("Save p4 config to [${configFilePath.toFile().canonicalPath}] success.")
         }
     }
