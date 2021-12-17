@@ -82,6 +82,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
             p4client.use {
                 val client = param.getClient(p4client)
                 logPreChange(client)
+                if (autoCleanup) {
+                    p4client.cleanup(client)
+                }
                 val syncOptions = MoreSyncOptions(
                     forceUpdate, noUpdate, clientBypass,
                     serverBypass, quiet, safetyCheck, max
@@ -182,8 +185,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
             return
         }
         val reader = BufferedReader(FileReader(file))
-        reader.lines().forEach {
-            logger.info("Pre sync change: $it.")
+        reader.use {
+            it.lines().forEach {
+                logger.info("Pre sync change: $it.")
+            }
         }
     }
 }

@@ -166,7 +166,9 @@ class P4SyncParam(
     @JsonProperty("unshelveId")
     val unshelveId: Int? = null,
     @JsonProperty("charsetName")
-    val charsetName: String = NONE
+    val charsetName: String = NONE,
+    @JsonProperty("autoCleanup")
+    val autoCleanup: Boolean = false
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)

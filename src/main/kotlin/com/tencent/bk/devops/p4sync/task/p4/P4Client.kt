@@ -3,6 +3,7 @@ package com.tencent.bk.devops.p4sync.task.p4
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.client.IClientViewMapping
 import com.perforce.p4java.core.IChangelistSummary
+import com.perforce.p4java.core.file.FileSpecBuilder
 import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.exception.AccessException
 import com.perforce.p4java.exception.RequestException
@@ -14,6 +15,7 @@ import com.perforce.p4java.impl.mapbased.server.Parameters
 import com.perforce.p4java.impl.mapbased.server.Server
 import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder
 import com.perforce.p4java.option.client.ParallelSyncOptions
+import com.perforce.p4java.option.client.ReconcileFilesOptions
 import com.perforce.p4java.option.client.SyncOptions
 import com.perforce.p4java.option.server.DeleteClientOptions
 import com.perforce.p4java.option.server.GetChangelistsOptions
@@ -24,6 +26,7 @@ import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
+import com.tencent.bk.devops.p4sync.task.p4.callback.ReconcileStreamCallback
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
@@ -224,6 +227,21 @@ class P4Client(
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
         return server.getChangelists(null, ops)
+    }
+
+    fun cleanup(client: IClient) {
+        processKey++
+        ProcessCallBack.addKey(processKey, ProcessCallBack.AUTO_CLEANUP)
+        val cleanupOpt = ReconcileFilesOptions()
+        cleanupOpt.isUpdateWorkspace = true
+        cleanupOpt.isUseWildcards = true
+        cleanupOpt.outsideAdd = true
+        cleanupOpt.outsideEdit = true
+        cleanupOpt.isRemoved = true
+        val path = "${client.root}/..."
+        val files = FileSpecBuilder.makeFileSpecList(path)
+        setClient(client)
+        client.reconcileFiles(files, cleanupOpt, ReconcileStreamCallback(client.server), 0)
     }
 
     override fun close() {

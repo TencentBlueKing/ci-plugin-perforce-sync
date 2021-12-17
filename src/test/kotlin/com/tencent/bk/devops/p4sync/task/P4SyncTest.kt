@@ -44,6 +44,7 @@ class P4SyncTest {
             rootPath = "dev",
             stream = stream,
             charsetName = "utf8",
+            autoCleanup = true
 //            forceUpdate = true,
 //            unshelveId = 25
         )

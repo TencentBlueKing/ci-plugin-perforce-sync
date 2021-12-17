@@ -85,6 +85,7 @@ class ProcessCallBack : IProgressCallback {
         const val SYNC = "SYNC"
         const val UNSHELVE = "UNSHELVE"
         const val CREATE_CLIENT = "CREATE_CLIENT"
+        const val AUTO_CLEANUP = "AUTO_CLEANUP"
 
         // key由Server生成的执行命令的integer序号，为了增加可读性这里进行了替换。
         val TASK_KEY_MAP = mutableMapOf<Int, String>()

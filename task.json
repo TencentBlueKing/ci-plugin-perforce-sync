@@ -300,6 +300,16 @@
         }]
       }
     },
+    "autoCleanup": {
+      "text": "Auto cleanup and sync",
+      "default": false,
+      "desc": "REPLACE missing/modified files,DELETE generated files.",
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
     "unshelveId": {
       "label": "unshelveId",
       "placeholder": "如：526",
