@@ -43,6 +43,7 @@ abstract class AbstractStreamCallback(private val server: IServer) : IStreamingC
 
         return true
     }
+
     open fun success() {}
 
     protected fun mapToString(resultMap: Map<String, Any>): String {
@@ -64,11 +65,13 @@ abstract class AbstractStreamCallback(private val server: IServer) : IStreamingC
         when (level) {
             LOG_LEVEL_INFO -> logger.info("$prefix $msg")
             LOG_LEVEL_ERROR -> {
-                if (normalMessages().contains(msg)) {
-                    logger.info("$prefix $msg")
-                } else {
-                    logger.error("$prefix $msg")
+                normalMessages().forEach {
+                    if (msg.contains(it)) {
+                        logger.info("$prefix $msg")
+                        return
+                    }
                 }
+                logger.error("$prefix $msg")
             }
         }
     }
