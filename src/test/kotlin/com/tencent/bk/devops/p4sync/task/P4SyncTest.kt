@@ -131,7 +131,8 @@ class P4SyncTest {
     private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
         val credential = ticket ?: password
-        p4Sync.syncWithTry(param, result, userName = userName, credential = credential)
+        val executeResult = p4Sync.syncWithTry(param, result, userName = userName, credential = credential)
+        println(executeResult)
         assertEquals(Status.success, result.status)
     }
 
