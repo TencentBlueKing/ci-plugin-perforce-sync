@@ -561,7 +561,11 @@
     },
     "BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID": {
       "type": "string",
-      "description": "本次产生的submit的client id"
+      "description": "本次构建最后的change的client id"
+    },
+    "BK_CI_P4_DEPOT_HEAD_CHANGE_USER": {
+      "type": "string",
+      "description": "本次构建最后的change的用户"
     },
     "BK_CI_P4_DEPOT_LAST_CHANGE_ID": {
       "type": "string",
