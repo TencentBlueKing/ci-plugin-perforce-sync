@@ -22,6 +22,7 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_PORT
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_STREAM
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_WORKSPACE_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BLANK
+import com.tencent.bk.devops.p4sync.task.constants.EMPTY
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
@@ -98,7 +99,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 val result = ExecuteResult()
                 val client = param.getClient(p4client)
                 result.depotUrl = p4client.uri
-                result.stream = stream
+                result.stream = stream ?: EMPTY
                 result.charset = charsetName
                 result.workspacePath = client.root
                 logPreChange(client, result)

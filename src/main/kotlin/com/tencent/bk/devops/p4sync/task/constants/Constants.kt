@@ -10,6 +10,7 @@ val UN_SHELVE = "unshelve"
 val SYNC = "sync"
 val NONE = "none"
 val BLANK = " "
+const val EMPTY = ""
 
 const val BK_CI_P4_DEPOT_HEAD_CHANGE_ID = "BK_CI_P4_REPO_HEAD_CHANGE_ID"
 const val BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT = "BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT"
