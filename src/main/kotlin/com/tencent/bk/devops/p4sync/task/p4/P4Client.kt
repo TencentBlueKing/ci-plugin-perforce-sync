@@ -55,24 +55,8 @@ class P4Client(
             server.addTrust(TrustOptions().setAutoAccept(true))
         }
         server.connect()
-
-        // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
-        // 所以这里不确定用户设置的是密码还是ticket，
-        // 所以先进行密码登录，如果失败，则进行ticket登录
-        try {
-            server.login(password)
-        } catch (e: AccessException) {
-            // 触发认证，设置serverId。否则设置ticket的时候会根据serverAddress,
-            // 获取时候又根据serverId来获取，导致不匹配，获取不到ticket，认证失败
-            server.loginStatus
-            server.authTicket = password
-        }
-        val loginStatus = server.loginStatus
-        if (!loginStatus.contains("ticket expires")) {
-            throw AccessException("登录凭证错误，认证失败！")
-        }
-        logger.info(loginStatus)
         setCharset(charsetName)
+        login()
     }
 
     fun sync(
@@ -203,6 +187,9 @@ class P4Client(
     }
 
     fun unshelve(id: Int, client: IClient) {
+        if (!isLogin()) {
+            login()
+        }
         val unshelveFilesOptions = UnshelveFilesOptions(false, false)
         client.unshelveChangelist0(
             id, null,
@@ -273,6 +260,42 @@ class P4Client(
         val files = FileSpecBuilder.makeFileSpecList(path)
         setClient(client)
         client.reconcileFiles(files, cleanupOpt, ReconcileStreamCallback(client.server), 0)
+    }
+
+    private fun login() {
+        if (isLogin()) {
+            logger.info("已登录：${server.loginStatus}")
+            return
+        }
+        // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
+        // 所以这里不确定用户设置的是密码还是ticket，
+        // 所以先进行密码登录，如果失败，则进行ticket登录
+        try {
+            server.login(password)
+        } catch (e: AccessException) {
+            // 触发认证，设置serverId。否则设置ticket的时候会根据serverAddress,
+            // 获取时候又根据serverId来获取，导致不匹配，获取不到ticket，认证失败
+            server.loginStatus
+            server.authTicket = password
+        }
+        if (!isLogin()) {
+            throw AccessException("登录凭证错误，认证失败！")
+        }
+        logger.info("登录成功：${server.loginStatus}")
+    }
+
+    private fun isLogin(): Boolean {
+        val loginStatus = server.loginStatus
+        if (loginStatus.contains("ticket expires")) {
+            return true
+        }
+        if (loginStatus.contains("not necessary")) {
+            return true
+        }
+        if (loginStatus.isEmpty()) {
+            return true
+        }
+        return false
     }
 
     override fun close() {
