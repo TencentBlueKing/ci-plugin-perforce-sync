@@ -67,9 +67,11 @@ class P4Client(
             server.loginStatus
             server.authTicket = password
         }
-        if (!server.loginStatus.contains("ticket expires")) {
+        val loginStatus = server.loginStatus
+        if (!loginStatus.contains("ticket expires")) {
             throw AccessException("登录凭证错误，认证失败！")
         }
+        logger.info(loginStatus)
         setCharset(charsetName)
     }
 
@@ -254,6 +256,7 @@ class P4Client(
     }
 
     fun getChangeList(max: Int): List<IChangelistSummary> {
+        logger.info(server.loginStatus)
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
         ops.type = IChangelist.Type.SUBMITTED
