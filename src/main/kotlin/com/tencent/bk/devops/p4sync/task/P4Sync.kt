@@ -103,6 +103,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.charset = charsetName
                 result.workspacePath = client.root
                 logPreChange(client, result)
+                saveChanges(p4client, client, result)
+                // 保存client信息
+                save(client, p4port, charsetName)
                 if (autoCleanup) {
                     p4client.cleanup(client)
                 }
@@ -121,9 +124,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     logger.info("unshelve id $unshelveId.")
                     p4client.unshelve(unshelveId, client)
                 }
-                saveChanges(p4client, client, result)
-                // 保存client信息
-                save(client, p4port, charsetName)
                 return result
             }
         }

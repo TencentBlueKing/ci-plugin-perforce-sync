@@ -256,7 +256,6 @@ class P4Client(
     }
 
     fun getChangeList(max: Int): List<IChangelistSummary> {
-        logger.info(server.loginStatus)
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
         ops.type = IChangelist.Type.SUBMITTED
