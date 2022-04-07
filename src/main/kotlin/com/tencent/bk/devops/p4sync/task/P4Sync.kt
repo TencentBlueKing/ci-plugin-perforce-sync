@@ -9,9 +9,22 @@ import com.perforce.p4java.server.PerforceCharsets
 import com.tencent.bk.devops.atom.AtomContext
 import com.tencent.bk.devops.atom.common.Status
 import com.tencent.bk.devops.atom.pojo.AtomResult
+import com.tencent.bk.devops.atom.pojo.StringData
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_USER
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_LAST_CHANGE_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_P4_CHARSET
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_PORT
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_STREAM
+import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_WORKSPACE_PATH
+import com.tencent.bk.devops.p4sync.task.constants.BLANK
+import com.tencent.bk.devops.p4sync.task.constants.EMPTY
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
+import com.tencent.bk.devops.p4sync.task.constants.P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
@@ -57,20 +70,23 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
         val userName = data[0]
         val credential = data[1]
-        syncWithTry(param, result, userName, credential)
+        val executeResult = syncWithTry(param, result, userName, credential)
+        setOutPut(context, executeResult)
     }
 
-    fun syncWithTry(param: P4SyncParam, result: AtomResult, userName: String, credential: String) {
+    fun syncWithTry(param: P4SyncParam, result: AtomResult, userName: String, credential: String): ExecuteResult {
+        var sync: ExecuteResult? = null
         try {
-            sync(param, userName, credential)
+            sync = sync(param, userName, credential)
         } catch (e: Exception) {
             result.status = Status.failure
             result.message = e.message
             logger.error("同步失败", e)
         }
+        return sync ?: ExecuteResult()
     }
 
-    private fun sync(param: P4SyncParam, userName: String, credential: String) {
+    private fun sync(param: P4SyncParam, userName: String, credential: String): ExecuteResult {
         with(param) {
             val useSSL = param.p4port.startsWith("ssl:")
             val p4client = P4Client(
@@ -80,8 +96,19 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 charsetName
             )
             p4client.use {
+                val result = ExecuteResult()
                 val client = param.getClient(p4client)
-                logPreChange(client)
+                result.depotUrl = p4client.uri
+                result.stream = stream ?: EMPTY
+                result.charset = charsetName
+                result.workspacePath = client.root
+                logPreChange(client, result)
+                saveChanges(p4client, client, result)
+                // 保存client信息
+                save(client, p4port, charsetName)
+                if (autoCleanup) {
+                    p4client.cleanup(client)
+                }
                 val syncOptions = MoreSyncOptions(
                     forceUpdate, noUpdate, clientBypass,
                     serverBypass, quiet, safetyCheck, max
@@ -97,11 +124,21 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     logger.info("unshelve id $unshelveId.")
                     p4client.unshelve(unshelveId, client)
                 }
-                saveChanges(p4client, client)
-                // 保存client信息
-                save(client, p4port)
+                return result
             }
         }
+    }
+
+    private fun setOutPut(context: AtomContext<P4SyncParam>, executeResult: ExecuteResult) {
+        context.result.data[BK_CI_P4_DEPOT_HEAD_CHANGE_ID] = StringData(executeResult.headCommitId)
+        context.result.data[BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT] = StringData(executeResult.headCommitComment)
+        context.result.data[BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID] = StringData(executeResult.headCommitClientId)
+        context.result.data[BK_CI_P4_DEPOT_HEAD_CHANGE_USER] = StringData(executeResult.headCommitUser)
+        context.result.data[BK_CI_P4_DEPOT_LAST_CHANGE_ID] = StringData(executeResult.lastCommitId)
+        context.result.data[BK_CI_P4_DEPOT_WORKSPACE_PATH] = StringData(executeResult.workspacePath)
+        context.result.data[BK_CI_P4_DEPOT_PORT] = StringData(executeResult.depotUrl)
+        context.result.data[BK_CI_P4_DEPOT_STREAM] = StringData(executeResult.stream)
+        context.result.data[BK_CI_P4_DEPOT_P4_CHARSET] = StringData(executeResult.charset)
     }
 
     private fun checkParam(param: P4SyncParam, result: AtomResult) {
@@ -132,7 +169,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         Files.delete(tmpFile)
     }
 
-    private fun save(client: IClient, uri: String) {
+    private fun save(client: IClient, uri: String, charsetName: String) {
         val p4user = client.server.userName
         val configFilePath = getP4ConfigPath(client)
         val outputStream = Files.newOutputStream(configFilePath)
@@ -140,18 +177,26 @@ class P4Sync : TaskAtom<P4SyncParam> {
         printWriter.use {
             printWriter.println("$P4_USER=$p4user")
             printWriter.println("$P4_PORT=$uri")
-            printWriter.print("$P4_CLIENT=${client.name}")
+            printWriter.println("$P4_CLIENT=${client.name}")
+            if (client.server.supportsUnicode()) {
+                printWriter.println("$P4_CHARSET=$charsetName")
+            }
             logger.info("Save p4 config to [${configFilePath.toFile().canonicalPath}] success.")
         }
     }
 
-    private fun saveChanges(p4Client: P4Client, client: IClient) {
+    private fun saveChanges(p4Client: P4Client, client: IClient, result: ExecuteResult) {
         val changesFilePath = getChangesLogPath(client)
         val changesOutput = Files.newOutputStream(changesFilePath)
         val changeWriter = PrintWriter(changesOutput)
         val changelist = p4Client.getChangeList(1)
         if (changelist.isNotEmpty()) {
-            val logChange = formatChange(changelist.first())
+            val changeSummary = changelist.first()
+            val logChange = formatChange(changeSummary)
+            result.headCommitId = changeSummary.id.toString()
+            result.headCommitComment = changeSummary.description
+            result.headCommitClientId = changeSummary.clientId
+            result.headCommitUser = changeSummary.username
             logger.info(logChange)
             changeWriter.use {
                 changeWriter.println(logChange)
@@ -164,7 +209,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val format = SimpleDateFormat("yyyy/MM/dd")
         val date = change.date
         val desc = change.description.substring(0, change.description.lastIndex)
-        return "Change ${change.id} on ${format.format(date)} by ${change.clientId} '$desc '"
+        return "Change ${change.id} on ${format.format(date)} by ${change.username}@${change.clientId} '$desc '"
     }
 
     private fun getChangesLogPath(client: IClient): Path {
@@ -175,15 +220,19 @@ class P4Sync : TaskAtom<P4SyncParam> {
         return Paths.get(client.root, P4_CONFIG_FILE_NAME)
     }
 
-    private fun logPreChange(client: IClient) {
+    private fun logPreChange(client: IClient, result: ExecuteResult) {
         val changesFilePath = getChangesLogPath(client)
         val file = changesFilePath.toFile()
         if (!file.exists()) {
             return
         }
         val reader = BufferedReader(FileReader(file))
-        reader.lines().forEach {
-            logger.info("Pre sync change: $it.")
+        reader.use {
+            it.lines().findFirst().ifPresent { log ->
+                val change = log.split(BLANK)[1]
+                result.lastCommitId = change
+                logger.info("Pre sync change: $log.")
+            }
         }
     }
 }

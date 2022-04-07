@@ -22,7 +22,7 @@ class P4SyncTest {
     val ticket = ""
     val clientName = System.getProperty("P4CLIENT")
     val stream = "//Test/dev"
-    val rootPath = System.getProperty("java.io.tmpdir").plus("tmp").plus("ut")
+    val rootPath = System.getProperty("java.io.tmpdir").plus("tmp").plus("ut3")
 
     private val p4Sync = P4Sync()
 
@@ -44,8 +44,9 @@ class P4SyncTest {
             rootPath = "dev",
             stream = stream,
             charsetName = "utf8",
+            autoCleanup = true,
 //            forceUpdate = true,
-//            unshelveId = 25
+            unshelveId = 51
         )
         param.bkWorkspace = rootPath
         syncAndCheck(param)
@@ -130,7 +131,8 @@ class P4SyncTest {
     private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
         val credential = ticket ?: password
-        p4Sync.syncWithTry(param, result, userName = userName, credential = credential)
+        val executeResult = p4Sync.syncWithTry(param, result, userName = userName, credential = credential)
+        println(executeResult)
         assertEquals(Status.success, result.status)
     }
 
