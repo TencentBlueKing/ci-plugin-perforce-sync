@@ -1,80 +1,89 @@
-version: "v2.0"
+version: v2.0
+ 
+resources:
+  repositories:
+    - repository: ci_templates/public/codecc #声明引用的模板地址
+      name: codecc
 stages:
-- name: "stage-1"
-  jobs:
-    job_aSk:
-      name: "构建环境-LINUX"
-      runs-on:
-        pool-name: "docker"
-        container:
-          image: "mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
-        needs: {}
-      steps:
-        - checkout: "self"
-        - name: "腾讯代码分析(官方-代码分析工作组)"
-          uses: "CodeccCheckAtomDebug@4.*"
-          with:
-            beAutoLang: false
-            languages:
-            - "KOTLIN"
-            checkerSetType: "normal"
-            tools:
-            - "CCN"
-            asyncTask: false
-            asyncTaskId: ""
-            bk_atom_del_hook_url: "http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D"
-            bk_atom_del_hook_url_method: "DELETE"
-            scriptType: "SHELL"
-            script: |-
-            languageRuleSetMap:
+  - name: "stage1"
+    check-out: #Stage准出
+      gates: #声明质量红线
+      - template: commonGate.yml@codecc
+    jobs:
+      job_aSk:
+        name: "构建环境-LINUX"
+        runs-on:
+          pool-name: "docker"
+          container:
+            image: "mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
+          needs: {}
+        steps:
+          - checkout: "self"
+          - name: "腾讯代码分析(官方-代码分析工作组)"
+            uses: "CodeccCheckAtomDebug@4.*"
+            with:
+              beAutoLang: false
+              languages:
+              - "KOTLIN"
+              checkerSetType: "normal"
+              tools:
+              - "CCN"
+              asyncTask: false
+              asyncTaskId: ""
+              bk_atom_del_hook_url: "http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D"
+              bk_atom_del_hook_url_method: "DELETE"
+              scriptType: "SHELL"
+              script: |-
+              languageRuleSetMap:
+                JAVA_RULE: []
+                KOTLIN_RULE:
+                - "codecc_default_kotlin"
+                - "codecc_default_ccn_kotlin"
+              checkerSetEnvType: "prod"
+              multiPipelineMark: ""
+              rtxReceiverType: "1"
+              botWebhookUrl: ""
+              botRemindRange: "2"
+              botRemindSeverity: "7"
+              botRemaindTools: []
+              emailReceiverType: "1"
+              emailCCReceiverList: []
+              instantReportStatus: "2"
+              reportDate: []
+              reportTime: ""
+              reportTools: []
+              toolScanType: "1"
+              diffBranch: ""
+              byFile: false
+              mrCommentEnable: true
+              prohibitIgnore: false
+              newDefectJudgeFromDate: ""
+              transferAuthorList: []
+              path: []
+              customPath: []
+              scanTestSource: false
+              openScanPrj: false
+              issueSystem: "TAPD"
+              issueSubSystem: ""
+              issueResolvers: []
+              issueReceivers: []
+              issueFindByVersion: ""
+              maxIssue: 1000
+              issueAutoCommit: false
               JAVA_RULE: []
+              JAVA_TOOL:
+              - toolList:
+                - "CLOC"
+                - "DUPC"
+                - "WOODPECKER_SENSITIVE"
+                - "CCN"
+              - toolList:
+                - "CHECKSTYLE"
               KOTLIN_RULE:
               - "codecc_default_kotlin"
-            checkerSetEnvType: "prod"
-            multiPipelineMark: ""
-            rtxReceiverType: "1"
-            botWebhookUrl: ""
-            botRemindRange: "2"
-            botRemindSeverity: "7"
-            botRemaindTools: []
-            emailReceiverType: "1"
-            emailCCReceiverList: []
-            instantReportStatus: "2"
-            reportDate: []
-            reportTime: ""
-            reportTools: []
-            toolScanType: "1"
-            diffBranch: ""
-            byFile: false
-            mrCommentEnable: true
-            prohibitIgnore: false
-            newDefectJudgeFromDate: ""
-            transferAuthorList: []
-            path: []
-            customPath: []
-            scanTestSource: false
-            openScanPrj: false
-            issueSystem: "TAPD"
-            issueSubSystem: ""
-            issueResolvers: []
-            issueReceivers: []
-            issueFindByVersion: ""
-            maxIssue: 1000
-            issueAutoCommit: false
-            JAVA_RULE: []
-            JAVA_TOOL:
-            - toolList:
-              - "CLOC"
-              - "DUPC"
-              - "WOODPECKER_SENSITIVE"
-              - "CCN"
-            - toolList:
-              - "CHECKSTYLE"
-            KOTLIN_RULE:
-            - "codecc_default_kotlin"
-            KOTLIN_TOOL:
-            - toolList:
-              - "CLOC"
-              - "DUPC"
-              - "WOODPECKER_SENSITIVE"
-              - "DETEKT"
+              KOTLIN_TOOL:
+              - toolList:
+                - "CLOC"
+                - "DUPC"
+                - "WOODPECKER_SENSITIVE"
+                - "DETEKT"
