@@ -208,7 +208,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
     private fun formatChange(change: IChangelistSummary): String {
         val format = SimpleDateFormat("yyyy/MM/dd")
         val date = change.date
-        val desc = change.description.substring(0, change.description.lastIndex)
+        val desc = change.description.dropLast(1)
         return "Change ${change.id} on ${format.format(date)} by ${change.username}@${change.clientId} '$desc '"
     }
 
