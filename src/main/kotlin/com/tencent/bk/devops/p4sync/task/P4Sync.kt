@@ -21,6 +21,14 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_PORT
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_STREAM
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_WORKSPACE_PATH
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_CONTAINER_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_P4_CHARSET
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_PORT
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_STREAM
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_CLIENT_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TASKID
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
 import com.tencent.bk.devops.p4sync.task.constants.BLANK
 import com.tencent.bk.devops.p4sync.task.constants.EMPTY
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
@@ -102,6 +110,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.stream = stream ?: EMPTY
                 result.charset = charsetName
                 result.workspacePath = client.root
+                result.clientName = client.name
                 logPreChange(client, result)
                 saveChanges(p4client, client, result)
                 // 保存client信息
@@ -139,6 +148,21 @@ class P4Sync : TaskAtom<P4SyncParam> {
         context.result.data[BK_CI_P4_DEPOT_PORT] = StringData(executeResult.depotUrl)
         context.result.data[BK_CI_P4_DEPOT_STREAM] = StringData(executeResult.stream)
         context.result.data[BK_CI_P4_DEPOT_P4_CHARSET] = StringData(executeResult.charset)
+        // 设置CodeCC扫描需要的仓库信息
+        setOutPutForCodeCC(context, executeResult)
+    }
+
+    private fun setOutPutForCodeCC(context: AtomContext<P4SyncParam>, executeResult: ExecuteResult) {
+        val taskId = context.param.pipelineTaskId
+        context.result.data[BK_REPO_TASKID + taskId] = StringData(context.param.pipelineTaskId)
+        context.result.data[BK_REPO_CONTAINER_ID + taskId]=
+            StringData(context.allParameters["pipeline.job.id"]?.toString() ?: "")
+        context.result.data[BK_REPO_TYPE + taskId] = StringData("perforce")
+        context.result.data[BK_REPO_TICKET_ID + taskId] = StringData(context.param.ticketId)
+        context.result.data[BK_REPO_DEPOT_PORT + taskId] = StringData(executeResult.depotUrl)
+        context.result.data[BK_REPO_DEPOT_STREAM + taskId] = StringData(executeResult.stream)
+        context.result.data[BK_REPO_DEPOT_P4_CHARSET + taskId] = StringData(executeResult.charset)
+        context.result.data[BK_REPO_P4_CLIENT_NAME + taskId] = StringData(executeResult.clientName)
     }
 
     private fun checkParam(param: P4SyncParam, result: AtomResult) {

@@ -12,6 +12,7 @@ class ExecuteResult {
     var depotUrl: String = EMPTY
     var stream: String = EMPTY
     var charset: String = EMPTY
+    var clientName: String = EMPTY
     override fun toString(): String {
         return "ExecuteResult(headCommitId=$headCommitId, " +
             "headCommitComment=$headCommitComment," +
@@ -21,6 +22,7 @@ class ExecuteResult {
             " workspacePath=$workspacePath, " +
             "depotUrl=$depotUrl, " +
             "stream=$stream, " +
-            "charset=$charset)"
+            "charset=$charset)" +
+            "clientName=$clientName"
     }
 }
