@@ -174,7 +174,7 @@ class P4SyncParam(
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
     private fun getWorkspace(): Workspace {
         val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
-        else Paths.get(bkWorkspace, rootPath)
+        else Paths.get(bkWorkspace, rootPath).normalize()
         Files.createDirectories(clientRootPath)
         logger.info("文件保存路径：$clientRootPath")
         return Workspace(
