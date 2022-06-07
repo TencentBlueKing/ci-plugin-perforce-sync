@@ -164,7 +164,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         context.result.data[BK_REPO_DEPOT_STREAM + taskId] = StringData(executeResult.stream)
         context.result.data[BK_REPO_DEPOT_P4_CHARSET + taskId] = StringData(executeResult.charset)
         context.result.data[BK_REPO_P4_CLIENT_NAME + taskId] = StringData(executeResult.clientName)
-        context.result.data[BK_REPO_LOCAL_PATH + taskId] = StringData(context.param.rootPath)
+        context.result.data[BK_REPO_LOCAL_PATH + taskId] = StringData(context.param.rootPath ?: "")
     }
 
     private fun checkParam(param: P4SyncParam, result: AtomResult) {
