@@ -407,8 +407,8 @@
       "groupName": "syncOptions"
     },
     "netMaxWait": {
-      "label": "同步最大等待时间",
-      "desc": "",
+      "label": "同步最大等待时间（ms）",
+      "desc": "网络连接超时时间",
       "type": "vuex-input",
       "required": false,
       "disabled": false,
