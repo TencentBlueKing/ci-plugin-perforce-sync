@@ -168,7 +168,9 @@ class P4SyncParam(
     @JsonProperty("charsetName")
     val charsetName: String = NONE,
     @JsonProperty("autoCleanup")
-    val autoCleanup: Boolean = false
+    val autoCleanup: Boolean = false,
+    @JsonProperty("netMaxWait")
+    val netMaxWait: Int = 60
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)

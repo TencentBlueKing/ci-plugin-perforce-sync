@@ -33,15 +33,17 @@ import com.tencent.bk.devops.p4sync.task.p4.callback.UnshelveStreamCallback
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
+import java.util.Properties
 
 class P4Client(
     // p4java://localhost:1666"
     val uri: String,
     val userName: String,
     val password: String? = null,
-    charsetName: String = NONE
+    charsetName: String = NONE,
+    properties: Properties,
 ) : AutoCloseable {
-    private val server: IOptionsServer = getOptionsServer(uri, null)
+    private val server: IOptionsServer = getOptionsServer(uri, properties)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
 
     companion object {

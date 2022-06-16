@@ -3,6 +3,7 @@ package com.tencent.bk.devops.p4sync.task
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.core.IChangelistSummary
 import com.perforce.p4java.core.file.FileSpecBuilder
+import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK
 import com.perforce.p4java.impl.mapbased.rpc.stream.helper.RpcSocketHelper
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.server.PerforceCharsets
@@ -51,6 +52,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
+import java.util.Properties
 import kotlin.random.Random
 
 @AtomService(paramClass = P4SyncParam::class)
@@ -102,7 +104,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 uri = if (useSSL) "p4javassl://${param.p4port.substring(4)}" else "p4java://${param.p4port}",
                 userName = userName,
                 password = credential,
-                charsetName
+                charsetName,
+                getProperties(this)
             )
             p4client.use {
                 val result = ExecuteResult()
@@ -156,7 +159,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
     private fun setOutPutForCodeCC(context: AtomContext<P4SyncParam>, executeResult: ExecuteResult) {
         val taskId = context.param.pipelineTaskId
         context.result.data[BK_REPO_TASKID + taskId] = StringData(context.param.pipelineTaskId)
-        context.result.data[BK_REPO_CONTAINER_ID + taskId]=
+        context.result.data[BK_REPO_CONTAINER_ID + taskId] =
             StringData(context.allParameters["pipeline.job.id"]?.toString() ?: "")
         context.result.data[BK_REPO_TYPE + taskId] = StringData("perforce")
         context.result.data[BK_REPO_TICKET_ID + taskId] = StringData(context.param.ticketId)
@@ -260,5 +263,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 logger.info("Pre sync change: $log.")
             }
         }
+    }
+
+    private fun getProperties(param: P4SyncParam): Properties {
+        val properties = Properties()
+        properties.setProperty(RPC_SOCKET_SO_TIMEOUT_NICK, param.netMaxWait.toString())
+        return properties
     }
 }

@@ -406,6 +406,16 @@
       "isSensitive": false,
       "groupName": "syncOptions"
     },
+    "netMaxWait": {
+      "label": "同步最大等待时间",
+      "desc": "",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
     "batch": {
       "label": "批处理数量",
       "type": "vuex-input",
