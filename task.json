@@ -1,7 +1,6 @@
 {
   "atomCode": "PerforceSync",
   "execution": {
-    "packagePath": "PerforceSync-jar-with-dependencies.jar",
     "language": "java",
     "minimumVersion": "1.8",
     "demands": [],
@@ -400,6 +399,16 @@
     "max": {
       "label": "同步最大数量",
       "desc": "p4 sync -m",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "netMaxWait": {
+      "label": "同步最大等待时间（ms）",
+      "desc": "网络连接超时时间",
       "type": "vuex-input",
       "required": false,
       "disabled": false,

@@ -168,13 +168,15 @@ class P4SyncParam(
     @JsonProperty("charsetName")
     val charsetName: String = NONE,
     @JsonProperty("autoCleanup")
-    val autoCleanup: Boolean = false
+    val autoCleanup: Boolean = false,
+    @JsonProperty("netMaxWait")
+    val netMaxWait: Int = 60_1000
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
     private fun getWorkspace(): Workspace {
         val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
-        else Paths.get(bkWorkspace, rootPath)
+        else Paths.get(bkWorkspace, rootPath).normalize()
         Files.createDirectories(clientRootPath)
         logger.info("文件保存路径：$clientRootPath")
         return Workspace(
