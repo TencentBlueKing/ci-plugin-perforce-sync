@@ -244,11 +244,10 @@ class P4Client(
         }
     }
 
-    fun getChangeList(max: Int, clientName: String): List<IChangelistSummary> {
+    fun getChangeList(max: Int): List<IChangelistSummary> {
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
         ops.type = IChangelist.Type.SUBMITTED
-        ops.clientName = clientName
         return server.getChangelists(null, ops)
     }
 
