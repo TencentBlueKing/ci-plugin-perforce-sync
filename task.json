@@ -1,6 +1,7 @@
 {
   "atomCode": "PerforceSync",
   "execution": {
+    "packagePath": "PerforceSync-jar-with-dependencies.jar",
     "language": "java",
     "minimumVersion": "1.8",
     "demands": [],
