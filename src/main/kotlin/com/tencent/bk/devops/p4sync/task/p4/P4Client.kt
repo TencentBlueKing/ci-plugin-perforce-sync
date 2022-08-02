@@ -252,6 +252,30 @@ class P4Client(
         return server.getChangelists(null, ops)
     }
 
+    fun getLastChangeByStream(streamName: String): IChangelistSummary {
+        return getChangeListByStream(1, streamName).first()
+    }
+
+    fun getChangeListByStream(max: Int, streamName: String): List<IChangelistSummary> {
+        val summary = ClientSummary()
+        val clientName = "${System.nanoTime()}.tmp"
+        summary.stream = streamName
+        summary.name = clientName
+        summary.description = "Created by landun (拉取p4) plugin"
+        val client = Client(summary, server, false)
+        try {
+            server.createClient(client)
+            val ops = GetChangelistsOptions()
+            ops.maxMostRecent = max
+            ops.type = IChangelist.Type.SUBMITTED
+            ops.setOptions("//$clientName/...")
+            setClient(client)
+            return server.getChangelists(null, ops)
+        } finally {
+            deleteClient(clientName)
+        }
+    }
+
     fun cleanup(client: IClient) {
         val cleanupOpt = ReconcileFilesOptions()
         cleanupOpt.isUpdateWorkspace = true

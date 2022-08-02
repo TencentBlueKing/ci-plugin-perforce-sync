@@ -218,14 +218,20 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val changesFilePath = getChangesLogPath(client)
         val changesOutput = Files.newOutputStream(changesFilePath)
         val changeWriter = PrintWriter(changesOutput)
-        val changelist = p4Client.getChangeList(1)
-        if (changelist.isNotEmpty()) {
-            val changeSummary = changelist.first()
-            val logChange = formatChange(changeSummary)
-            result.headCommitId = changeSummary.id.toString()
-            result.headCommitComment = changeSummary.description
-            result.headCommitClientId = changeSummary.clientId
-            result.headCommitUser = changeSummary.username
+        val changeSummary = if (client.stream != null) {
+            p4Client.getLastChangeByStream(client.stream)
+        } else {
+            val list = p4Client.getChangeList(1)
+            if (list.isNotEmpty()) {
+                list.first()
+            } else null
+        }
+        changeSummary?.let {
+            val logChange = formatChange(it)
+            result.headCommitId = it.id.toString()
+            result.headCommitComment = it.description
+            result.headCommitClientId = it.clientId
+            result.headCommitUser = it.username
             logger.info(logChange)
             changeWriter.use {
                 changeWriter.println(logChange)
