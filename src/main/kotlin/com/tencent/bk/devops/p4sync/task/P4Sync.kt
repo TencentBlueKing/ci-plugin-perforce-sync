@@ -89,6 +89,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
         var sync: ExecuteResult? = null
         try {
             sync = sync(param, userName, credential)
+            if (!sync.result) {
+                result.status = Status.failure
+            }
         } catch (e: Exception) {
             result.status = Status.failure
             result.message = e.message
@@ -131,7 +134,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     minimumSize, numberOfThreads, null
                 )
                 val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
-                p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs, keepGoingOnError)
+                val ret = p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs, keepGoingOnError)
+                result.result = ret
                 // unshelve
                 unshelveId?.let {
                     logger.info("unshelve id $unshelveId.")

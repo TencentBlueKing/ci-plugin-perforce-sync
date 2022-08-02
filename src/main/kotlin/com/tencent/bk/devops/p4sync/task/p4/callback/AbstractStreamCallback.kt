@@ -11,6 +11,7 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
     IStreamingCallback {
     private val logger = LoggerFactory.getLogger(AbstractStreamCallback::class.java)
 
+    private var failure = false
     open fun buildMessage(resultMap: Map<String, Any>): String {
         val depotFile = resultMap["depotFile"]
         val rev = resultMap["rev"]
@@ -40,6 +41,9 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
             FileSpecOpStatus.ERROR,
             FileSpecOpStatus.CLIENT_ERROR -> {
                 log(statusMessage, LOG_LEVEL_ERROR)
+                if (!keepGoingOnError) {
+                    failure = true
+                }
                 return keepGoingOnError
             }
             else -> log(mapToString(resultMap), LOG_LEVEL_WARN)
@@ -81,6 +85,10 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
     }
 
     abstract fun taskName(): String
+
+    fun hasFailure(): Boolean {
+        return failure
+    }
 
     companion object {
         const val LOG_LEVEL_INFO = 10
