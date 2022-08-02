@@ -170,7 +170,10 @@ class P4SyncParam(
     @JsonProperty("autoCleanup")
     val autoCleanup: Boolean = false,
     @JsonProperty("netMaxWait")
-    val netMaxWait: Int = 60_1000
+    val netMaxWait: Int = 60_1000,
+
+    @JsonProperty("keepGoingOnError")
+    val keepGoingOnError: Boolean = false
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)

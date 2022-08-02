@@ -65,10 +65,11 @@ class P4Client(
         client: IClient,
         syncOptions: SyncOptions,
         parallelSyncOptions: ParallelSyncOptions,
-        fileSpecs: List<IFileSpec>?
-    ) {
+        fileSpecs: List<IFileSpec>?,
+        keepGoingOnError: Boolean
+    ): Boolean {
         setClient(client)
-        val callback = SyncStreamCallback(client.server)
+        val callback = SyncStreamCallback(client.server, keepGoingOnError)
         if (parallelSyncOptions.needParallel()) {
             client.syncParallel2(
                 fileSpecs = fileSpecs,
@@ -78,6 +79,7 @@ class P4Client(
             )
         }
         client.sync(fileSpecs, syncOptions, callback, 0)
+        return !callback.hasFailure()
     }
 
     private fun IClient.syncParallel2(
@@ -249,6 +251,30 @@ class P4Client(
         ops.maxMostRecent = max
         ops.type = IChangelist.Type.SUBMITTED
         return server.getChangelists(null, ops)
+    }
+
+    fun getLastChangeByStream(streamName: String): IChangelistSummary {
+        return getChangeListByStream(1, streamName).first()
+    }
+
+    fun getChangeListByStream(max: Int, streamName: String): List<IChangelistSummary> {
+        val summary = ClientSummary()
+        val clientName = "${System.nanoTime()}.tmp"
+        summary.stream = streamName
+        summary.name = clientName
+        summary.description = "Created by landun (拉取p4) plugin"
+        val client = Client(summary, server, false)
+        try {
+            server.createClient(client)
+            val ops = GetChangelistsOptions()
+            ops.maxMostRecent = max
+            ops.type = IChangelist.Type.SUBMITTED
+            ops.setOptions("//$clientName/...")
+            setClient(client)
+            return server.getChangelists(null, ops)
+        } finally {
+            deleteClient(clientName)
+        }
     }
 
     fun cleanup(client: IClient) {

@@ -331,6 +331,15 @@
       "hidden": false,
       "isSensitive": false
     },
+    "keepGoingOnError": {
+      "text": "遇到错误继续运行",
+      "default": false,
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
     "forceUpdate": {
       "text": "强制更新",
       "default": false,
