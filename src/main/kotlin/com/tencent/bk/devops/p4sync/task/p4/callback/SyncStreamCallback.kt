@@ -4,7 +4,8 @@ import com.perforce.p4java.server.IServer
 import com.tencent.bk.devops.p4sync.task.util.HumanReadable
 import org.slf4j.LoggerFactory
 
-class SyncStreamCallback(server: IServer) : AbstractStreamCallback(server) {
+class SyncStreamCallback(server: IServer, keepGoingOnError: Boolean) :
+    AbstractStreamCallback(server, keepGoingOnError) {
     private var totalFileSize = 0L
     private var process = 0
     private var totalFileCount = 0

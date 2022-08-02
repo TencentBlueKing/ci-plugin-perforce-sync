@@ -7,7 +7,8 @@ import com.perforce.p4java.server.callback.IStreamingCallback
 import org.slf4j.LoggerFactory
 import java.lang.StringBuilder
 
-abstract class AbstractStreamCallback(private val server: IServer) : IStreamingCallback {
+abstract class AbstractStreamCallback(private val server: IServer, private val keepGoingOnError: Boolean = false) :
+    IStreamingCallback {
     private val logger = LoggerFactory.getLogger(AbstractStreamCallback::class.java)
 
     open fun buildMessage(resultMap: Map<String, Any>): String {
@@ -37,7 +38,10 @@ abstract class AbstractStreamCallback(private val server: IServer) : IStreamingC
             }
             FileSpecOpStatus.INFO -> log(statusMessage, LOG_LEVEL_INFO)
             FileSpecOpStatus.ERROR,
-            FileSpecOpStatus.CLIENT_ERROR -> log(statusMessage, LOG_LEVEL_ERROR)
+            FileSpecOpStatus.CLIENT_ERROR -> {
+                log(statusMessage, LOG_LEVEL_ERROR)
+                return keepGoingOnError
+            }
             else -> log(mapToString(resultMap), LOG_LEVEL_WARN)
         }
 

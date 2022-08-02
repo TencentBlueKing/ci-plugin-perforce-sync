@@ -65,10 +65,11 @@ class P4Client(
         client: IClient,
         syncOptions: SyncOptions,
         parallelSyncOptions: ParallelSyncOptions,
-        fileSpecs: List<IFileSpec>?
+        fileSpecs: List<IFileSpec>?,
+        keepGoingOnError: Boolean
     ) {
         setClient(client)
-        val callback = SyncStreamCallback(client.server)
+        val callback = SyncStreamCallback(client.server, keepGoingOnError)
         if (parallelSyncOptions.needParallel()) {
             client.syncParallel2(
                 fileSpecs = fileSpecs,

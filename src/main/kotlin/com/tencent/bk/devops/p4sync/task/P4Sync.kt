@@ -131,7 +131,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     minimumSize, numberOfThreads, null
                 )
                 val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
-                p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs)
+                p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs, keepGoingOnError)
                 // unshelve
                 unshelveId?.let {
                     logger.info("unshelve id $unshelveId.")
