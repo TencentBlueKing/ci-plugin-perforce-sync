@@ -31,7 +31,7 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
     override fun handleResult(resultMap: MutableMap<String, Any>, key: Int): Boolean {
         val fileSpec = ResultListBuilder.handleFileReturn(resultMap, server)
         val statusMessage = fileSpec.statusMessage
-        when (fileSpec.opStatus) {
+        when (correctFileSpecStatus(statusMessage, fileSpec.opStatus)) {
             FileSpecOpStatus.VALID -> {
                 val msg = buildMessage(resultMap)
                 success()
@@ -72,15 +72,7 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
         val prefix = prefix()
         when (level) {
             LOG_LEVEL_INFO -> logger.info("$prefix $msg")
-            LOG_LEVEL_ERROR -> {
-                normalMessages().forEach {
-                    if (msg.contains(it)) {
-                        logger.info("$prefix $msg")
-                        return
-                    }
-                }
-                logger.error("$prefix $msg")
-            }
+            LOG_LEVEL_ERROR -> logger.error("$prefix $msg")
         }
     }
 
@@ -88,6 +80,16 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
 
     fun hasFailure(): Boolean {
         return failure
+    }
+
+    private fun correctFileSpecStatus(msg: String?, fileSpecOpStatus: FileSpecOpStatus): FileSpecOpStatus {
+        msg ?: return fileSpecOpStatus
+        normalMessages().forEach {
+            if (msg.contains(it)) {
+                return FileSpecOpStatus.INFO
+            }
+        }
+        return fileSpecOpStatus
     }
 
     companion object {
