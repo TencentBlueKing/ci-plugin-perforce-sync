@@ -46,11 +46,6 @@ class P4Client(
     private val server: IOptionsServer = getOptionsServer(uri, properties)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
 
-    companion object {
-        // p4发送命令的次数，与RpcServer的nextCmdCallBackKey对应，用于process callback的命令转换
-        const val INIT_PROCESS_KEY = 3
-    }
-
     init {
         server.userName = userName
         if (uri.startsWith(IServerAddress.Protocol.P4JAVASSL.toString())) {
@@ -314,6 +309,7 @@ class P4Client(
 
     private fun isLogin(): Boolean {
         val loginStatus = server.loginStatus
+        logger.info(loginStatus)
         if (loginStatus.contains("ticket expires")) {
             return true
         }
