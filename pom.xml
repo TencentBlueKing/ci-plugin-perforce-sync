@@ -31,6 +31,12 @@
             <groupId>com.tencent.bk.devops.atom</groupId>
             <artifactId>java-atom-sdk</artifactId>
             <version>${sdk.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15to18</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -62,6 +68,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.22</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.46</version>
         </dependency>
     </dependencies>
 
