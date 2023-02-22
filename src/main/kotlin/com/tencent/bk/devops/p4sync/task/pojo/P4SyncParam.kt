@@ -39,7 +39,7 @@ class P4SyncParam(
      * 如果为空则创建一个临时client
      * */
     @JsonProperty("clientName")
-    val clientName: String,
+    val clientName: String? = null,
 
     /**
      * stream
@@ -182,9 +182,12 @@ class P4SyncParam(
         else Paths.get(bkWorkspace, rootPath).normalize()
         Files.createDirectories(clientRootPath)
         logger.info("文件保存路径：$clientRootPath")
+        val cn = clientName ?: "${System.nanoTime()}.tmp"
         return Workspace(
-            name = clientName, description = "create by p4sync",
-            root = clientRootPath.toString(), mappings = view?.lines(),
+            name = cn,
+            description = "create by p4sync",
+            root = clientRootPath.toString(),
+            mappings = view?.lines(),
             stream = stream,
             lineEnd = if (lineEnd == null) IClientSummary.ClientLineEnd.LOCAL
             else IClientSummary.ClientLineEnd.getValue(lineEnd)
@@ -199,7 +202,7 @@ class P4SyncParam(
 
     fun getClient(p4Client: P4Client): IClient {
         val workspace = getWorkspace()
-        val client = p4Client.getClient(clientName)
+        val client = p4Client.getClient(workspace.name)
             ?: p4Client.createClient(workspace)
         if (client.root != workspace.root) {
             throw IllegalArgumentException(

@@ -1,10 +1,11 @@
 {
   "atomCode": "PerforceSync",
   "execution": {
+    "packagePath": "PerforceSync-jar-with-dependencies.jar",
     "language": "java",
     "minimumVersion": "1.8",
     "demands": [],
-    "target": "java -jar ATOM_CODE-jar-with-dependencies.jar"
+    "target": "$bk_java_path -Dfile.encoding=utf8 -jar PerforceSync-jar-with-dependencies.jar"
   },
   "input": {
     "p4port": {
@@ -240,10 +241,9 @@
     },
     "clientName": {
       "label": "工作空间名称",
-      "placeholder": "如果没有则会创建",
+      "desc": "如果该工作空间不存在则会新建，选项为空时则创建临时工作空间",
       "type": "vuex-input",
-      "desc": "",
-      "required": true,
+      "required": false,
       "disabled": false,
       "hidden": false,
       "isSensitive": false

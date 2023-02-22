@@ -111,8 +111,19 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 getProperties(this)
             )
             p4client.use {
-                val result = ExecuteResult()
-                val client = param.getClient(p4client)
+                return execute(param, p4client)
+            }
+        }
+    }
+
+    private fun execute(
+        param: P4SyncParam,
+        p4client: P4Client
+    ): ExecuteResult {
+        with(param) {
+            val result = ExecuteResult()
+            val client = param.getClient(p4client)
+            try {
                 result.depotUrl = p4client.uri
                 result.stream = stream ?: EMPTY
                 result.charset = charsetName
@@ -142,6 +153,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     p4client.unshelve(unshelveId, client)
                 }
                 return result
+            } finally {
+                clientName ?: let {
+                    // 删除临时client
+                    p4client.deleteClient(client.name)
+                }
             }
         }
     }
