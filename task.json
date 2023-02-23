@@ -8,6 +8,80 @@
     "target": "$bk_java_path -Dfile.encoding=utf8 -jar PerforceSync-jar-with-dependencies.jar"
   },
   "input": {
+    "repositoryType": {
+      "label": "代码库",
+      "default": "ID",
+      "desc": "值为ID/NAME/URL",
+      "type": "enum-input",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "list": [
+        {
+          "label": "按代码库选择",
+          "value": "ID"
+        },
+        {
+          "label": "按代码库别名输入",
+          "value": "NAME"
+        },
+        {
+          "label": "按仓库URL输入",
+          "value": "URL"
+        }
+      ]
+    },
+    "repositoryHashId": {
+      "label": "按代码库选择",
+      "default": "",
+      "placeholder": "请选择代码库名称",
+      "type": "selector",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "optionsConf": {
+        "searchable": true,
+        "multiple": false,
+        "url": "/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=5000&repositoryType=CODE_P4",
+        "paramId": "repositoryHashId",
+        "paramName": "aliasName",
+        "itemTargetUrl": "http://devops.oa.com/console/codelib/{projectId}/",
+        "itemText": "关联代码库",
+        "hasAddItem": true
+      },
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "ID"
+          }
+        ]
+      }
+    },
+    "repositoryName": {
+      "label": "按代码库别名输入",
+      "default": "",
+      "placeholder": "请输入代码库别名",
+      "type": "vuex-input",
+      "desc": "描述",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "NAME"
+          }
+        ]
+      }
+    },
     "p4port": {
       "label": "P4服务器地址",
       "placeholder": "如: localhost:1666",
@@ -16,7 +90,45 @@
       "required": true,
       "disabled": false,
       "hidden": false,
-      "isSensitive": false
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "URL"
+          }
+        ]
+      }
+    },
+    "ticketId": {
+      "label": "用户凭证",
+      "placeholder": "请选中对应凭证",
+      "type": "selector",
+      "desc": "凭证支持密码和ticket两种，使用凭证类型用户名+密码，密码可以输入p4密码或者ticket",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "optionsConf": {
+        "searchable": true,
+        "multiple": false,
+        "url": "/ticket/api/user/credentials/{projectId}/hasPermissionList?permission=USE&credentialTypes=USERNAME_PASSWORD&page=1&pageSize=10000",
+        "paramId": "credentialId",
+        "paramName": "credentialId",
+        "itemTargetUrl": "/ticket/{projectId}/createCredential/USERNAME_PASSWORD",
+        "itemText": "添加新的凭证",
+        "hasAddItem": true
+      },
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "URL"
+          }
+        ]
+      }
     },
     "proxy_flag": {
       "text": "使用代理",
@@ -43,26 +155,6 @@
           "key": "proxy_flag",
           "value": true
         }]
-      }
-    },
-    "ticketId": {
-      "label": "用户凭证",
-      "placeholder": "请选中对应凭证",
-      "type": "selector",
-      "desc": "凭证支持密码和ticket两种，使用凭证类型用户名+密码，密码可以输入p4密码或者ticket",
-      "required": true,
-      "disabled": false,
-      "hidden": false,
-      "isSensitive": false,
-      "optionsConf": {
-        "searchable": true,
-        "multiple": false,
-        "url": "/ticket/api/user/credentials/{projectId}/hasPermissionList?permission=USE&credentialTypes=USERNAME_PASSWORD&page=1&pageSize=10000",
-        "paramId": "credentialId",
-        "paramName": "credentialId",
-        "itemTargetUrl": "/ticket/{projectId}/createCredential/USERNAME_PASSWORD",
-        "itemText": "添加新的凭证",
-        "hasAddItem": true
       }
     },
     "charsetName": {

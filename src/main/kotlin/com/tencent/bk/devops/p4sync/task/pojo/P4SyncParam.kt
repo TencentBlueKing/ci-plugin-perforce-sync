@@ -6,6 +6,7 @@ import com.perforce.p4java.client.IClientSummary
 import com.perforce.p4java.impl.generic.client.ClientOptions
 import com.tencent.bk.devops.atom.pojo.AtomBaseParam
 import com.tencent.bk.devops.p4sync.task.constants.NONE
+import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
 import org.slf4j.LoggerFactory
@@ -29,6 +30,24 @@ class P4SyncParam(
      * */
     @JsonProperty("ticketId")
     val ticketId: String = "",
+    /**
+     * 代码库类型
+     * ID: 按代码库选择
+     * NAME: 按代码库别名输入
+     * URL: 按仓库URL输入
+     */
+    @JsonProperty("repositoryType")
+    val repositoryType: String = RepositoryType.ID.name,
+    /**
+     * 按代码库选择
+     */
+    @JsonProperty("repositoryHashId")
+    val repositoryHashId: String? = "",
+    /**
+     * 按代码库别名输入
+     */
+    @JsonProperty("repositoryName")
+    val repositoryName: String? = "",
     /**
      * 同步文件版本
      * */
