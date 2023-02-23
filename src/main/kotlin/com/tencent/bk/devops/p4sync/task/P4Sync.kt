@@ -75,7 +75,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
             return
         }
         val credentialInfo = AuthService(param, result, DevopsApi()).getCredentialInfo()
-        param.p4port = result.data[BK_REPO_P4_REPO_PATH].toString()
         if (param.httpProxy != null && param.httpProxy.contains(':')) {
             val proxyParam = param.httpProxy.split(':')
             RpcSocketHelper.httpProxyHost = proxyParam[0]
