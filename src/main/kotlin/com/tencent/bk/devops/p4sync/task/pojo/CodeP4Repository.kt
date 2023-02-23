@@ -22,12 +22,12 @@ data class CodeP4Repository(
     /**
      * 用户名
      * */
-    @JsonProperty("projectName")
+    @JsonProperty("userName")
     val userName: String,
     /**
      * 蓝盾项目ID
      * */
-    @JsonProperty("projectName")
+    @JsonProperty("projectId")
     val projectId: String?,
     /**
      * 仓库hash id
@@ -37,6 +37,6 @@ data class CodeP4Repository(
     /**
      * 代码库别名
      * */
-    @JsonProperty("repoHashId")
+    @JsonProperty("aliasName")
     val aliasName: String
 )
