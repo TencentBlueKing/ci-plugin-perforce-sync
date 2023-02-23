@@ -30,6 +30,7 @@ package com.tencent.bk.devops.p4sync.task.api
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.devops.atom.api.BaseApi
 import com.tencent.bk.devops.p4sync.task.pojo.CodeP4Repository
+import com.tencent.bk.devops.p4sync.task.pojo.CommitData
 import com.tencent.bk.devops.p4sync.task.pojo.PipelineBuildMaterial
 import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
 import com.tencent.bk.devops.plugin.pojo.Result
@@ -46,6 +47,16 @@ class DevopsApi : BaseApi() {
         val path = "/process/api/build/repository/saveBuildMaterial"
         val request = buildPost(path, getJsonRequest(materialList), mutableMapOf())
         val responseContent = request(request, "添加源材料信息失败")
+        return JsonUtil.to(responseContent, object : TypeReference<Result<Int>>() {})
+    }
+
+    /**
+     * 保存提交信息
+     */
+    fun addCommit(commits: List<CommitData>): Result<Int> {
+        val path = "/repository/api/build/commit/addCommit"
+        val request = buildPost(path, getJsonRequest(commits), mutableMapOf())
+        val responseContent = request(request, "添加代码库commit信息失败")
         return JsonUtil.to(responseContent, object : TypeReference<Result<Int>>() {})
     }
 
