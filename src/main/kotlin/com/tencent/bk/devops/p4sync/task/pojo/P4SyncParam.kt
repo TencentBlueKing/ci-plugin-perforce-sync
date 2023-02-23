@@ -19,7 +19,7 @@ class P4SyncParam(
      * 如: localhost:1666
      * */
     @JsonProperty("p4port")
-    val p4port: String,
+    var p4port: String = "",
     /**
      * HTTP代理地址
      * */
