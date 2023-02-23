@@ -10,8 +10,8 @@
   "input": {
     "repositoryType": {
       "label": "代码库",
-      "default": "ID",
-      "desc": "值为ID/NAME/URL",
+      "default": "URL",
+      "desc": "值为URL/ID/NAME",
       "type": "enum-input",
       "required": true,
       "disabled": false,
@@ -19,16 +19,16 @@
       "isSensitive": false,
       "list": [
         {
+          "label": "按仓库URL输入",
+          "value": "URL"
+        },
+        {
           "label": "按代码库选择",
           "value": "ID"
         },
         {
           "label": "按代码库别名输入",
           "value": "NAME"
-        },
-        {
-          "label": "按仓库URL输入",
-          "value": "URL"
         }
       ]
     },

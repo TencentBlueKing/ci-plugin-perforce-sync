@@ -273,7 +273,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
             }
         }
         // 保存原材料
-        saveBuildMaterial(changeList, atomResult)
+        saveBuildMaterial(changeList, atomResult, param)
         // 保存提交信息
         saveChangeCommit(changeList, atomResult, param)
 
@@ -341,7 +341,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, atomResult: AtomResult) {
+    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, atomResult: AtomResult, param: P4SyncParam) {
         val aliasName = atomResult.data[BK_REPO_P4_REPO_NAME] ?: return
         val url = atomResult.data[BK_REPO_P4_REPO_PATH] ?: return
         changeList.first().let {
@@ -350,7 +350,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     PipelineBuildMaterial(
                         aliasName = aliasName.toString(),
                         url = url.toString(),
-                        branchName = it.changelistStream,
+                        branchName = param.stream,
                         newCommitId = "${it.id}",
                         newCommitComment = it.description,
                         commitTimes = changeList.size,
