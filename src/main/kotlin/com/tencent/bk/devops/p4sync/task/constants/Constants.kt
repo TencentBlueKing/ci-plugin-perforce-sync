@@ -32,3 +32,9 @@ const val BK_REPO_DEPOT_STREAM = "bk_repo_depot_stream_"
 const val BK_REPO_DEPOT_P4_CHARSET = "bk_repo_depot_p4_charset_"
 const val BK_REPO_P4_CLIENT_NAME = "bk_repo_p4_client_name_"
 const val BK_REPO_LOCAL_PATH = "bk_repo_local_path_"
+// 代码库ID
+const val BK_REPO_P4_REPO_ID = "BK_REPO_P4_REPO_ID"
+// 代码库别名
+const val BK_REPO_P4_REPO_NAME = "BK_REPO_P4_REPO_NAME"
+// 代码库URL
+const val BK_REPO_P4_REPO_PATH = "BK_REPO_P4_REPO_PATH"

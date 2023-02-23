@@ -13,6 +13,7 @@ import com.tencent.bk.devops.atom.pojo.AtomResult
 import com.tencent.bk.devops.atom.pojo.StringData
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
+import com.tencent.bk.devops.p4sync.task.api.DevopsApi
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_ID
@@ -28,6 +29,9 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_PORT
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_STREAM
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_LOCAL_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_CLIENT_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TASKID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
@@ -39,11 +43,12 @@ import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
 import com.tencent.bk.devops.p4sync.task.constants.P4_USER
-import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
+import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
-import com.tencent.bk.devops.p4sync.task.util.CredentialUtils
+import com.tencent.bk.devops.p4sync.task.pojo.PipelineBuildMaterial
+import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.FileReader
@@ -63,24 +68,18 @@ class P4Sync : TaskAtom<P4SyncParam> {
     override fun execute(context: AtomContext<P4SyncParam>) {
         val param = context.param
         val result = context.result
-        val ticketId = param.ticketId
         checkParam(param, result)
         if (result.status != Status.success) {
             return
         }
-        val (data, type) = CredentialUtils.getCredentialWithType(ticketId)
-        if (type != CredentialType.USERNAME_PASSWORD) {
-            result.message = "凭证错误【$type】，需要用户名+密码类型的凭证"
-            result.status = Status.failure
-            return
-        }
+        val credentialInfo = AuthService(param, result, DevopsApi()).getCredentialInfo()
         if (param.httpProxy != null && param.httpProxy.contains(':')) {
             val proxyParam = param.httpProxy.split(':')
             RpcSocketHelper.httpProxyHost = proxyParam[0]
             RpcSocketHelper.httpProxyPort = proxyParam[1].toInt()
         }
-        val userName = data[0]
-        val credential = data[1]
+        val userName = credentialInfo[0]
+        val credential = credentialInfo[1]
         val executeResult = syncWithTry(param, result, userName, credential)
         setOutPut(context, executeResult)
     }
@@ -88,7 +87,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
     fun syncWithTry(param: P4SyncParam, result: AtomResult, userName: String, credential: String): ExecuteResult {
         var sync: ExecuteResult? = null
         try {
-            sync = sync(param, userName, credential)
+            sync = sync(param, userName, credential, result)
             if (!sync.result) {
                 result.status = Status.failure
             }
@@ -100,7 +99,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         return sync ?: ExecuteResult()
     }
 
-    private fun sync(param: P4SyncParam, userName: String, credential: String): ExecuteResult {
+    private fun sync(param: P4SyncParam, userName: String, credential: String, atomResult: AtomResult): ExecuteResult {
         with(param) {
             val useSSL = param.p4port.startsWith("ssl:")
             val p4client = P4Client(
@@ -111,14 +110,15 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 getProperties(this)
             )
             p4client.use {
-                return execute(param, p4client)
+                return execute(param, p4client, atomResult)
             }
         }
     }
 
     private fun execute(
         param: P4SyncParam,
-        p4client: P4Client
+        p4client: P4Client,
+        atomResult: AtomResult
     ): ExecuteResult {
         with(param) {
             val result = ExecuteResult()
@@ -130,7 +130,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.workspacePath = client.root
                 result.clientName = client.name
                 logPreChange(client, result)
-                saveChanges(p4client, client, result)
+                saveChanges(p4client, client, result, atomResult)
                 // 保存client信息
                 save(client, p4port, charsetName)
                 if (autoCleanup) {
@@ -199,10 +199,13 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.status = Status.failure
                 result.message = "同步的文件输出路径不可用: ${e.message}"
             }
+            // 检查字符集
             if (!PerforceCharsets.isSupported(charsetName)) {
                 result.status = Status.failure
                 result.message = "Charset $charsetName not supported."
             }
+            // 检查代码库参数
+            checkRepositoryInfo(param, result)
         }
     }
 
@@ -234,18 +237,21 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun saveChanges(p4Client: P4Client, client: IClient, result: ExecuteResult) {
+    private fun saveChanges(p4Client: P4Client, client: IClient, result: ExecuteResult, atomResult: AtomResult) {
         val changesFilePath = getChangesLogPath(client)
         val changesOutput = Files.newOutputStream(changesFilePath)
         val changeWriter = PrintWriter(changesOutput)
+        val changeList: List<IChangelistSummary>
         val changeSummary = if (client.stream != null) {
-            p4Client.getLastChangeByStream(client.stream)
+            changeList = p4Client.getChangeListByStream(1, client.stream)
+            changeList.first()
         } else {
-            val list = p4Client.getChangeList(1)
-            if (list.isNotEmpty()) {
-                list.first()
+            changeList = p4Client.getChangeList(1)
+            if (changeList.isNotEmpty()) {
+                changeList.first()
             } else null
         }
+        // 最新修改
         changeSummary?.let {
             val logChange = formatChange(it)
             result.headCommitId = it.id.toString()
@@ -257,6 +263,17 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 changeWriter.println(logChange)
                 logger.info("Record change log to [${changesFilePath.toFile().canonicalPath}] success.")
             }
+            // 保存原材料
+            val aliasName = atomResult.data[BK_REPO_P4_REPO_NAME] ?: return
+            val url = atomResult.data[BK_REPO_P4_REPO_PATH] ?: return
+            DevopsApi().saveBuildMaterial(mutableListOf(PipelineBuildMaterial(
+                aliasName = aliasName.toString(),
+                url = url.toString(),
+                branchName = "",
+                newCommitId = "${it.id}",
+                newCommitComment = it.description,
+                commitTimes = changeList.size
+            )))
         }
     }
 
@@ -295,5 +312,30 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val properties = Properties()
         properties.setProperty(RPC_SOCKET_SO_TIMEOUT_NICK, param.netMaxWait.toString())
         return properties
+    }
+
+    private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
+        with(param) {
+            when (RepositoryType.valueOf(repositoryType)) {
+                RepositoryType.ID -> {
+                    repositoryHashId ?: run {
+                        result.status = Status.failure
+                        result.message = "代码库ID不能为空"
+                    }
+                    result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
+                }
+                RepositoryType.NAME -> {
+                    repositoryName ?: run {
+                        result.status = Status.failure
+                        result.message = "代码库名称不能为空"
+                    }
+                    result.data[BK_REPO_P4_REPO_NAME] = StringData(repositoryName)
+                }
+                RepositoryType.URL -> {
+                    result.data[BK_REPO_P4_REPO_PATH] = StringData(p4port)
+                    null
+                }
+            }
+        }
     }
 }
