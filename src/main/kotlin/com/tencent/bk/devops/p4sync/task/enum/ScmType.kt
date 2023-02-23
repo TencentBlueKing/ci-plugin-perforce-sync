@@ -25,17 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.bk.devops.p4sync.task.pojo
+package com.tencent.bk.devops.p4sync.task.enum
 
-/**
- * 构建历史中的源材料
- */
-data class PipelineBuildMaterial(
-    val aliasName: String?,
-    val url: String,
-    val branchName: String?,
-    val newCommitId: String?,
-    val newCommitComment: String?,
-    val commitTimes: Int?,
-    val scmType: String?
-)
+enum class ScmType {
+    CODE_SVN,
+    CODE_GIT,
+    CODE_GITLAB,
+    GITHUB,
+    CODE_TGIT,
+    CODE_P4
+    ;
+
+    companion object {
+        fun parse(type: ScmType): Short {
+            return when (type) {
+                CODE_SVN -> 1.toShort()
+                CODE_GIT -> 2.toShort()
+                CODE_GITLAB -> 3.toShort()
+                GITHUB -> 4.toShort()
+                CODE_TGIT -> 5.toShort()
+                CODE_P4 -> 6.toShort()
+            }
+        }
+    }
+}

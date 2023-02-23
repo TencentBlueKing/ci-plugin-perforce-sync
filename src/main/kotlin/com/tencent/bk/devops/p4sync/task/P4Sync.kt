@@ -44,6 +44,7 @@ import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
 import com.tencent.bk.devops.p4sync.task.constants.P4_USER
 import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
+import com.tencent.bk.devops.p4sync.task.enum.ScmType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.pojo.CommitData
@@ -352,7 +353,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                         branchName = it.changelistStream,
                         newCommitId = "${it.id}",
                         newCommitComment = it.description,
-                        commitTimes = changeList.size
+                        commitTimes = changeList.size,
+                        scmType = ScmType.CODE_P4.name
                     )
                 )
             )
@@ -364,7 +366,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val url = atomResult.data[BK_REPO_P4_REPO_PATH] ?: return
         val commitData = changeList.map {
             CommitData(
-                type = 6,
+                type = ScmType.parse(ScmType.CODE_P4),
                 pipelineId = param.pipelineId,
                 buildId = param.pipelineBuildId,
                 commit = "${it.id}",
