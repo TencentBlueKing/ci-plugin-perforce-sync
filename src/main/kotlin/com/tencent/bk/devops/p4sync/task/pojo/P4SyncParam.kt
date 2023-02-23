@@ -47,7 +47,7 @@ class P4SyncParam(
      * 按代码库别名输入
      */
     @JsonProperty("repositoryName")
-    val repositoryName: String? = "",
+    var repositoryName: String? = "",
     /**
      * 同步文件版本
      * */

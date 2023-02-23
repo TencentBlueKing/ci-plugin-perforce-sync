@@ -44,6 +44,7 @@ class AuthService(
                 atomResult.data[BK_REPO_P4_REPO_PATH] = StringData(result.data!!.url)
                 credentialId = result.data!!.credentialId
                 param.p4port = result.data!!.url
+                param.repositoryName = result.data!!.aliasName
             }
             // 读取凭证
             val (credentialInfo, credentialType) = CredentialUtils.getCredentialWithType(credentialId)
