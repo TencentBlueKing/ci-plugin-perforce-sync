@@ -45,6 +45,7 @@ class AuthService(
                 credentialId = result.data!!.credentialId
                 param.p4port = result.data!!.url
                 param.repositoryName = result.data!!.aliasName
+                param.repositoryHashId = result.data!!.repoHashId
             }
             // 读取凭证
             val (credentialInfo, credentialType) = CredentialUtils.getCredentialWithType(credentialId)

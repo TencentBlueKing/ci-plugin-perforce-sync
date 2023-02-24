@@ -372,7 +372,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 comment = it.description,
                 repoId = param.repositoryHashId,
                 repoName = param.repositoryName,
-                elementId = param.p4port
+                elementId = param.pipelineTaskId
             )
         }
         DevopsApi().addCommit(commitData)
