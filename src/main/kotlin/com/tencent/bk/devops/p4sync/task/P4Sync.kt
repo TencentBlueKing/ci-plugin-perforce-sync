@@ -273,9 +273,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
             }
         }
         // 保存原材料
-        saveBuildMaterial(changeList, atomResult, param)
+        saveBuildMaterial(changeList, param)
         // 保存提交信息
-        saveChangeCommit(changeList, atomResult, param)
+        saveChangeCommit(changeList, param)
 
     }
 
@@ -341,15 +341,13 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, atomResult: AtomResult, param: P4SyncParam) {
-        val aliasName = atomResult.data[BK_REPO_P4_REPO_NAME] ?: return
-        val url = atomResult.data[BK_REPO_P4_REPO_PATH] ?: return
+    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, param: P4SyncParam) {
         changeList.first().let {
             DevopsApi().saveBuildMaterial(
                 mutableListOf(
                     PipelineBuildMaterial(
-                        aliasName = aliasName.toString(),
-                        url = url.toString(),
+                        aliasName = param.repositoryName,
+                        url = param.p4port,
                         branchName = param.stream,
                         newCommitId = "${it.id}",
                         newCommitComment = it.description,
@@ -361,9 +359,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun saveChangeCommit(changeList: List<IChangelistSummary>, atomResult: AtomResult, param: P4SyncParam) {
-        val aliasName = atomResult.data[BK_REPO_P4_REPO_NAME] ?: return
-        val url = atomResult.data[BK_REPO_P4_REPO_PATH] ?: return
+    private fun saveChangeCommit(changeList: List<IChangelistSummary>, param: P4SyncParam) {
         val commitData = changeList.map {
             CommitData(
                 type = ScmType.parse(ScmType.CODE_P4),
@@ -375,8 +371,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 commitTime = it.date.time / 1000, // 单位:秒
                 comment = it.description,
                 repoId = param.repositoryHashId,
-                repoName = aliasName.toString(),
-                elementId = url.toString()
+                repoName = param.repositoryName,
+                elementId = param.pipelineTaskId
             )
         }
         DevopsApi().addCommit(commitData)
