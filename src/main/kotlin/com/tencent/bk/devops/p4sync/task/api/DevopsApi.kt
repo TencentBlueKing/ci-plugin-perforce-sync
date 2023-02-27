@@ -46,7 +46,7 @@ class DevopsApi : BaseApi() {
     fun saveBuildMaterial(materialList: List<PipelineBuildMaterial>): Result<Int> {
         val path = "/process/api/build/repository/saveBuildMaterial"
         val request = buildPost(path, getJsonRequest(materialList), mutableMapOf())
-        val responseContent = request(request, "添加源材料信息失败")
+        val responseContent = request(request, "Failure to save information")
         return JsonUtil.to(responseContent, object : TypeReference<Result<Int>>() {})
     }
 
@@ -56,7 +56,7 @@ class DevopsApi : BaseApi() {
     fun addCommit(commits: List<CommitData>): Result<Int> {
         val path = "/repository/api/build/commit/addCommit"
         val request = buildPost(path, getJsonRequest(commits), mutableMapOf())
-        val responseContent = request(request, "添加代码库commit信息失败")
+        val responseContent = request(request, "Failure to save repository commit information")
         return JsonUtil.to(responseContent, object : TypeReference<Result<Int>>() {})
     }
 
@@ -69,7 +69,7 @@ class DevopsApi : BaseApi() {
                 "repositoryId=${repositoryConfig.getURLEncodeRepositoryId()}&" +
                 "repositoryType=${repositoryConfig.repositoryType.name}"
             val request = buildGet(path)
-            val responseContent = request(request, "获取代码库失败")
+            val responseContent = request(request, "Failure to get repository information")
             return JsonUtil.to(responseContent, object : TypeReference<Result<CodeP4Repository>>() {})
         } catch (ignore: Exception) {
             throw ignore

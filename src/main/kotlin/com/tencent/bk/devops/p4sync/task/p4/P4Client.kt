@@ -287,7 +287,7 @@ class P4Client(
 
     private fun login() {
         if (isLogin()) {
-            logger.info("已登录：${server.loginStatus}")
+            logger.info("already logged in：${server.loginStatus}")
             return
         }
         // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
@@ -302,9 +302,9 @@ class P4Client(
             server.authTicket = password
         }
         if (!isLogin()) {
-            throw AccessException("登录凭证错误，认证失败！")
+            throw AccessException("The login credentials are incorrect and authentication fails！")
         }
-        logger.info("登录成功：${server.loginStatus}")
+        logger.info("login successfully：${server.loginStatus}")
     }
 
     private fun isLogin(): Boolean {
