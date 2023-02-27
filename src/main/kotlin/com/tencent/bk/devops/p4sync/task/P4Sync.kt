@@ -303,7 +303,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         if (!file.exists()) {
             return
         }
-        val reader = BufferedReader(InputStreamReader(FileInputStream(file), StandardCharsets.UTF_8))
+        val reader = BufferedReader(FileReader(file))
         reader.use {
             it.lines().findFirst().ifPresent { log ->
                 val change = log.split(BLANK)[1]
