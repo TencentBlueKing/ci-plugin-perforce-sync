@@ -37,6 +37,7 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
 import com.tencent.bk.devops.p4sync.task.constants.BLANK
 import com.tencent.bk.devops.p4sync.task.constants.EMPTY
+import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGELIST_MAX_MOST_RECENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
@@ -89,7 +90,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
     fun syncWithTry(param: P4SyncParam, result: AtomResult, userName: String, credential: String): ExecuteResult {
         var sync: ExecuteResult? = null
         try {
-            sync = sync(param, userName, credential, result)
+            sync = sync(param, userName, credential)
             if (!sync.result) {
                 result.status = Status.failure
             }
@@ -101,7 +102,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         return sync ?: ExecuteResult()
     }
 
-    private fun sync(param: P4SyncParam, userName: String, credential: String, atomResult: AtomResult): ExecuteResult {
+    private fun sync(param: P4SyncParam, userName: String, credential: String): ExecuteResult {
         with(param) {
             val useSSL = param.p4port.startsWith("ssl:")
             val p4client = P4Client(
@@ -112,15 +113,14 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 getProperties(this)
             )
             p4client.use {
-                return execute(param, p4client, atomResult)
+                return execute(param, p4client)
             }
         }
     }
 
     private fun execute(
         param: P4SyncParam,
-        p4client: P4Client,
-        atomResult: AtomResult
+        p4client: P4Client
     ): ExecuteResult {
         with(param) {
             val result = ExecuteResult()
@@ -132,7 +132,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.workspacePath = client.root
                 result.clientName = client.name
                 logPreChange(client, result)
-                saveChanges(p4client, client, result, atomResult, param)
+                saveChanges(p4client, client, result, param)
                 // 保存client信息
                 save(client, p4port, charsetName)
                 if (autoCleanup) {
@@ -243,7 +243,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
         p4Client: P4Client,
         client: IClient,
         result: ExecuteResult,
-        atomResult: AtomResult,
         param: P4SyncParam
     ) {
         val changesFilePath = getChangesLogPath(client)
@@ -251,10 +250,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val changeWriter = PrintWriter(changesOutput)
         val changeList: List<IChangelistSummary>
         val changeSummary = if (client.stream != null) {
-            changeList = p4Client.getChangeListByStream(1, client.stream)
+            changeList = p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
             changeList.first()
         } else {
-            changeList = p4Client.getChangeList(1)
+            changeList = p4Client.getChangeList(P4_CHANGELIST_MAX_MOST_RECENT)
             if (changeList.isNotEmpty()) {
                 changeList.first()
             } else null
