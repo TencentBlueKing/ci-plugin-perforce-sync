@@ -200,7 +200,7 @@ class P4SyncParam(
         val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
         else Paths.get(bkWorkspace, rootPath).normalize()
         Files.createDirectories(clientRootPath)
-        logger.info("文件保存路径：$clientRootPath")
+        logger.info("File saving path：$clientRootPath")
         val cn = clientName ?: "${System.nanoTime()}.tmp"
         return Workspace(
             name = cn,
@@ -225,8 +225,10 @@ class P4SyncParam(
             ?: p4Client.createClient(workspace)
         if (client.root != workspace.root) {
             throw IllegalArgumentException(
-                "该工作空间已存在，但是当前文件保存路径不是该工作空间之前设置的文件保存路径，" +
-                    "请修改工作空间名称或者修改文件保存路径为${client.root}。注意此路径为绝对路径，请根据构建机工作空间更改。"
+                "The workspace already exists,the current file save path is not the previously set file save path for" +
+                    " the workspace," +
+                    "Change the workspace name or the file saving path to ${client.root}。Note that this path is an " +
+                    "absolute path,Please change according to the builder workspace。"
             )
         }
         return client

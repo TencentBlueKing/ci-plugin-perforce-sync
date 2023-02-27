@@ -41,12 +41,12 @@ class RepositoryConfig(
     fun getRepositoryId(): String {
         return when (repositoryType) {
             RepositoryType.ID -> if (repositoryHashId.isNullOrBlank()) {
-                throw InvalidParameterException("代码库HashId为空")
+                throw InvalidParameterException("The repository hashId cannot be empty")
             } else {
                 repositoryHashId
             }
             RepositoryType.NAME, RepositoryType.URL -> if (repositoryName.isNullOrBlank()) {
-                throw InvalidParameterException("代码库名为空")
+                throw InvalidParameterException("The repository name cannot be empty")
             } else {
                 repositoryName
             }

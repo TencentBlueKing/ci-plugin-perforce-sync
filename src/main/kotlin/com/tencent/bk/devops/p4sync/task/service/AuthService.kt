@@ -50,7 +50,8 @@ class AuthService(
             // 读取凭证
             val (credentialInfo, credentialType) = CredentialUtils.getCredentialWithType(credentialId)
             if (credentialType != CredentialType.USERNAME_PASSWORD) {
-                throw IllegalArgumentException("凭证错误【$credentialType】，需要用户名+密码类型的凭证")
+                throw IllegalArgumentException("Certificate type invalid[$credentialType],Required " +
+                                                   "type[USERNAME_PASSWORD]")
             }
             return credentialInfo
         }

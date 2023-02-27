@@ -96,7 +96,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         } catch (e: Exception) {
             result.status = Status.failure
             result.message = e.message
-            logger.error("同步失败", e)
+            logger.error("Synchronization failure", e)
         }
         return sync ?: ExecuteResult()
     }
@@ -199,7 +199,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 rootPath?.let { checkPathWriteAbility(rootPath) }
             } catch (e: Exception) {
                 result.status = Status.failure
-                result.message = "同步的文件输出路径不可用: ${e.message}"
+                result.message = "The output path of the synchronized file is unavailable: ${e.message}"
             }
             // 检查字符集
             if (!PerforceCharsets.isSupported(charsetName)) {
@@ -322,14 +322,14 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 RepositoryType.ID -> {
                     repositoryHashId ?: run {
                         result.status = Status.failure
-                        result.message = "代码库ID不能为空"
+                        result.message = "The repository hashId cannot be empty"
                     }
                     result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
                 }
                 RepositoryType.NAME -> {
                     repositoryName ?: run {
                         result.status = Status.failure
-                        result.message = "代码库名称不能为空"
+                        result.message = "The repository name cannot be empty"
                     }
                     result.data[BK_REPO_P4_REPO_NAME] = StringData(repositoryName)
                 }
@@ -343,6 +343,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     private fun saveBuildMaterial(changeList: List<IChangelistSummary>, param: P4SyncParam) {
         changeList.first().let {
+            if (param.repositoryName.isNullOrBlank()) {
+                param.repositoryName = param.p4port
+            }
             DevopsApi().saveBuildMaterial(
                 mutableListOf(
                     PipelineBuildMaterial(
@@ -360,6 +363,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun saveChangeCommit(changeList: List<IChangelistSummary>, param: P4SyncParam) {
+        if (param.repositoryName.isNullOrBlank()) {
+            param.repositoryName = param.p4port
+        }
         val commitData = changeList.map {
             CommitData(
                 type = ScmType.parse(ScmType.CODE_P4),
