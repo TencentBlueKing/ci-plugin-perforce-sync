@@ -53,8 +53,11 @@ import com.tencent.bk.devops.p4sync.task.pojo.PipelineBuildMaterial
 import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
+import java.io.FileInputStream
 import java.io.FileReader
+import java.io.InputStreamReader
 import java.io.PrintWriter
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -300,7 +303,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         if (!file.exists()) {
             return
         }
-        val reader = BufferedReader(FileReader(file))
+        val reader = BufferedReader(InputStreamReader(FileInputStream(file), StandardCharsets.UTF_8))
         reader.use {
             it.lines().findFirst().ifPresent { log ->
                 val change = log.split(BLANK)[1]
