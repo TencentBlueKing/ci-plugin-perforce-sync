@@ -11,7 +11,7 @@ class CredentialResourceApi : BaseApi() {
         try {
             val path = "/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
             val request = buildGet(path)
-            val responseContent = request(request, "获取凭据失败")
+            val responseContent = request(request, "Failure to get credential")
             return JsonUtil.to(responseContent, object : TypeReference<Result<CredentialInfo>>() {})
         } catch (e: Throwable) {
             throw IllegalArgumentException(e.message)

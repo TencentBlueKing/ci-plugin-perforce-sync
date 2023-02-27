@@ -13,6 +13,7 @@ import com.tencent.bk.devops.atom.pojo.AtomResult
 import com.tencent.bk.devops.atom.pojo.StringData
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
+import com.tencent.bk.devops.p4sync.task.api.DevopsApi
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT
 import com.tencent.bk.devops.p4sync.task.constants.BK_CI_P4_DEPOT_HEAD_CHANGE_ID
@@ -28,25 +29,29 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_PORT
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_STREAM
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_LOCAL_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_CLIENT_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TASKID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
-import com.tencent.bk.devops.p4sync.task.constants.BLANK
 import com.tencent.bk.devops.p4sync.task.constants.EMPTY
-import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
+import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGELIST_MAX_MOST_RECENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_PORT
 import com.tencent.bk.devops.p4sync.task.constants.P4_USER
-import com.tencent.bk.devops.p4sync.task.enum.ticket.CredentialType
+import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
+import com.tencent.bk.devops.p4sync.task.enum.ScmType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
+import com.tencent.bk.devops.p4sync.task.pojo.CommitData
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
-import com.tencent.bk.devops.p4sync.task.util.CredentialUtils
+import com.tencent.bk.devops.p4sync.task.pojo.PipelineBuildMaterial
+import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
+import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.FileReader
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Path
@@ -63,24 +68,18 @@ class P4Sync : TaskAtom<P4SyncParam> {
     override fun execute(context: AtomContext<P4SyncParam>) {
         val param = context.param
         val result = context.result
-        val ticketId = param.ticketId
         checkParam(param, result)
         if (result.status != Status.success) {
             return
         }
-        val (data, type) = CredentialUtils.getCredentialWithType(ticketId)
-        if (type != CredentialType.USERNAME_PASSWORD) {
-            result.message = "凭证错误【$type】，需要用户名+密码类型的凭证"
-            result.status = Status.failure
-            return
-        }
+        val credentialInfo = AuthService(param, result, DevopsApi()).getCredentialInfo()
         if (param.httpProxy != null && param.httpProxy.contains(':')) {
             val proxyParam = param.httpProxy.split(':')
             RpcSocketHelper.httpProxyHost = proxyParam[0]
             RpcSocketHelper.httpProxyPort = proxyParam[1].toInt()
         }
-        val userName = data[0]
-        val credential = data[1]
+        val userName = credentialInfo[0]
+        val credential = credentialInfo[1]
         val executeResult = syncWithTry(param, result, userName, credential)
         setOutPut(context, executeResult)
     }
@@ -95,7 +94,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         } catch (e: Exception) {
             result.status = Status.failure
             result.message = e.message
-            logger.error("同步失败", e)
+            logger.error("Synchronization failure", e)
         }
         return sync ?: ExecuteResult()
     }
@@ -111,15 +110,25 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 getProperties(this)
             )
             p4client.use {
-                val result = ExecuteResult()
-                val client = param.getClient(p4client)
+                return execute(param, p4client)
+            }
+        }
+    }
+
+    private fun execute(
+        param: P4SyncParam,
+        p4client: P4Client
+    ): ExecuteResult {
+        with(param) {
+            val result = ExecuteResult()
+            val client = param.getClient(p4client)
+            try {
                 result.depotUrl = p4client.uri
                 result.stream = stream ?: EMPTY
                 result.charset = charsetName
                 result.workspacePath = client.root
                 result.clientName = client.name
-                logPreChange(client, result)
-                saveChanges(p4client, client, result)
+                saveChanges(p4client, client, result, param)
                 // 保存client信息
                 save(client, p4port, charsetName)
                 if (autoCleanup) {
@@ -142,6 +151,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     p4client.unshelve(unshelveId, client)
                 }
                 return result
+            } finally {
+                clientName ?: let {
+                    // 删除临时client
+                    p4client.deleteClient(client.name)
+                }
             }
         }
     }
@@ -181,12 +195,15 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 rootPath?.let { checkPathWriteAbility(rootPath) }
             } catch (e: Exception) {
                 result.status = Status.failure
-                result.message = "同步的文件输出路径不可用: ${e.message}"
+                result.message = "The output path of the synchronized file is unavailable: ${e.message}"
             }
+            // 检查字符集
             if (!PerforceCharsets.isSupported(charsetName)) {
                 result.status = Status.failure
                 result.message = "Charset $charsetName not supported."
             }
+            // 检查代码库参数
+            checkRepositoryInfo(param, result)
         }
     }
 
@@ -218,29 +235,35 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun saveChanges(p4Client: P4Client, client: IClient, result: ExecuteResult) {
-        val changesFilePath = getChangesLogPath(client)
-        val changesOutput = Files.newOutputStream(changesFilePath)
-        val changeWriter = PrintWriter(changesOutput)
-        val changeSummary = if (client.stream != null) {
-            p4Client.getLastChangeByStream(client.stream)
+    private fun saveChanges(
+        p4Client: P4Client,
+        client: IClient,
+        result: ExecuteResult,
+        param: P4SyncParam
+    ) {
+        var changeList = if (client.stream != null) {
+            p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
         } else {
-            val list = p4Client.getChangeList(1)
-            if (list.isNotEmpty()) {
-                list.first()
-            } else null
+            p4Client.getChangeList(P4_CHANGELIST_MAX_MOST_RECENT)
         }
-        changeSummary?.let {
+        // 最新修改
+        changeList.firstOrNull()?.let {
             val logChange = formatChange(it)
             result.headCommitId = it.id.toString()
             result.headCommitComment = it.description
             result.headCommitClientId = it.clientId
             result.headCommitUser = it.username
             logger.info(logChange)
-            changeWriter.use {
-                changeWriter.println(logChange)
-                logger.info("Record change log to [${changesFilePath.toFile().canonicalPath}] success.")
-            }
+        }
+        // 对比历史构建，提取本次构建拉取的commit
+        changeList = getDiffChangeLists(changeList, param)
+        if (changeList.isNotEmpty()) {
+            // 保存原材料
+            saveBuildMaterial(changeList, param)
+            // 保存提交信息
+            saveChangeCommit(changeList, param)
+        } else {
+            logger.info("Already up to date,Do not save commit")
         }
     }
 
@@ -251,33 +274,120 @@ class P4Sync : TaskAtom<P4SyncParam> {
         return "Change ${change.id} on ${format.format(date)} by ${change.username}@${change.clientId} '$desc '"
     }
 
-    private fun getChangesLogPath(client: IClient): Path {
-        return Paths.get(client.root, P4_CHANGES_FILE_NAME)
-    }
-
     private fun getP4ConfigPath(client: IClient): Path {
         return Paths.get(client.root, P4_CONFIG_FILE_NAME)
-    }
-
-    private fun logPreChange(client: IClient, result: ExecuteResult) {
-        val changesFilePath = getChangesLogPath(client)
-        val file = changesFilePath.toFile()
-        if (!file.exists()) {
-            return
-        }
-        val reader = BufferedReader(FileReader(file))
-        reader.use {
-            it.lines().findFirst().ifPresent { log ->
-                val change = log.split(BLANK)[1]
-                result.lastCommitId = change
-                logger.info("Pre sync change: $log.")
-            }
-        }
     }
 
     private fun getProperties(param: P4SyncParam): Properties {
         val properties = Properties()
         properties.setProperty(RPC_SOCKET_SO_TIMEOUT_NICK, param.netMaxWait.toString())
         return properties
+    }
+
+    private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
+        with(param) {
+            when (RepositoryType.valueOf(repositoryType)) {
+                RepositoryType.ID -> {
+                    repositoryHashId ?: run {
+                        result.status = Status.failure
+                        result.message = "The repository hashId cannot be empty"
+                    }
+                    result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
+                }
+
+                RepositoryType.NAME -> {
+                    repositoryName ?: run {
+                        result.status = Status.failure
+                        result.message = "The repository name cannot be empty"
+                    }
+                    result.data[BK_REPO_P4_REPO_NAME] = StringData(repositoryName)
+                }
+
+                RepositoryType.URL -> {
+                    result.data[BK_REPO_P4_REPO_PATH] = StringData(p4port)
+                    null
+                }
+            }
+        }
+    }
+
+    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, param: P4SyncParam) {
+        changeList.first().let {
+            if (param.repositoryName.isNullOrBlank()) {
+                param.repositoryName = param.p4port
+            }
+            DevopsApi().saveBuildMaterial(
+                mutableListOf(
+                    PipelineBuildMaterial(
+                        aliasName = param.repositoryName,
+                        url = param.p4port,
+                        branchName = param.stream,
+                        newCommitId = "${it.id}",
+                        newCommitComment = it.description,
+                        commitTimes = changeList.size,
+                        scmType = ScmType.CODE_P4.name
+                    )
+                )
+            )
+        }
+    }
+
+    private fun saveChangeCommit(changeList: List<IChangelistSummary>, param: P4SyncParam) {
+        with(param) {
+            val commitData = changeList.map {
+                CommitData(
+                    type = ScmType.parse(ScmType.CODE_P4),
+                    pipelineId = pipelineId,
+                    buildId = pipelineBuildId,
+                    commit = "${it.id}",
+                    committer = it.username,
+                    author = it.username,
+                    commitTime = it.date.time / 1000, // 单位:秒
+                    comment = it.description,
+                    repoId = repositoryHashId,
+                    repoName = repositoryName,
+                    elementId = pipelineTaskId,
+                    url = p4port
+                )
+            }
+            DevopsApi().addCommit(commitData)
+        }
+    }
+
+    private fun getDiffChangeLists(
+        sourceChangeList: List<IChangelistSummary>,
+        param: P4SyncParam
+    ): List<IChangelistSummary> {
+        if (sourceChangeList.isEmpty()) {
+            return sourceChangeList
+        }
+        val result = mutableListOf<IChangelistSummary>()
+        with(param) {
+            var repositoryConfig: RepositoryConfig? = null
+            if (repositoryType != RepositoryType.URL.name) {
+                repositoryConfig = RepositoryConfig(
+                    repositoryHashId = repositoryHashId,
+                    repositoryName = repositoryName,
+                    repositoryType = RepositoryType.valueOf(repositoryType)
+                )
+            }
+            // 获取历史信息
+            val latestCommit = DevopsApi().getLatestCommit(
+                pipelineId = pipelineId,
+                elementId = pipelineTaskId,
+                repoId = repositoryConfig?.getURLEncodeRepositoryId() ?: "",
+                repositoryType = repositoryConfig?.repositoryType?.name ?: ""
+            )
+            if (latestCommit.data.isNullOrEmpty()) {
+                return sourceChangeList
+            }
+            val first = latestCommit.data?.first() ?: return sourceChangeList
+            sourceChangeList.forEach {
+                if (it.id > first.commit.toInt()) {
+                    result.add(it)
+                }
+            }
+            return result
+        }
     }
 }

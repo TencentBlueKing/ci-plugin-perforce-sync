@@ -85,7 +85,7 @@ abstract class AbstractStreamCallback(private val server: IServer, private val k
     private fun correctFileSpecStatus(msg: String?, fileSpecOpStatus: FileSpecOpStatus): FileSpecOpStatus {
         msg ?: return fileSpecOpStatus
         normalMessages().forEach {
-            if (msg.contains(it)) {
+            if (msg.contains(it, true)) {
                 return FileSpecOpStatus.INFO
             }
         }

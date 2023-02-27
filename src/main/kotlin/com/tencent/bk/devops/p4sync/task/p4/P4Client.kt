@@ -46,11 +46,6 @@ class P4Client(
     private val server: IOptionsServer = getOptionsServer(uri, properties)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
 
-    companion object {
-        // p4发送命令的次数，与RpcServer的nextCmdCallBackKey对应，用于process callback的命令转换
-        const val INIT_PROCESS_KEY = 3
-    }
-
     init {
         server.userName = userName
         if (uri.startsWith(IServerAddress.Protocol.P4JAVASSL.toString())) {
@@ -267,9 +262,7 @@ class P4Client(
         try {
             server.createClient(client)
             val ops = GetChangelistsOptions()
-            ops.maxMostRecent = max
-            ops.type = IChangelist.Type.SUBMITTED
-            ops.setOptions("//$clientName/...")
+            ops.setOptions("-m$max","-ssubmitted","//$clientName/...")
             setClient(client)
             return server.getChangelists(null, ops)
         } finally {
@@ -292,7 +285,7 @@ class P4Client(
 
     private fun login() {
         if (isLogin()) {
-            logger.info("已登录：${server.loginStatus}")
+            logger.info("already logged in：${server.loginStatus}")
             return
         }
         // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
@@ -307,13 +300,14 @@ class P4Client(
             server.authTicket = password
         }
         if (!isLogin()) {
-            throw AccessException("登录凭证错误，认证失败！")
+            throw AccessException("The login credentials are incorrect and authentication fails！")
         }
-        logger.info("登录成功：${server.loginStatus}")
+        logger.info("login successfully：${server.loginStatus}")
     }
 
     private fun isLogin(): Boolean {
         val loginStatus = server.loginStatus
+        logger.info(loginStatus)
         if (loginStatus.contains("ticket expires")) {
             return true
         }

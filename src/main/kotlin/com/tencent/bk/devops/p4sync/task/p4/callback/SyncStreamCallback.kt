@@ -19,6 +19,7 @@ class SyncStreamCallback(server: IServer, keepGoingOnError: Boolean) :
         if (resultMap["totalFileSize"] != null && resultMap["totalFileCount"] != null) {
             totalFileSize = resultMap["totalFileSize"].toString().toLong()
             totalFileCount = resultMap["totalFileCount"].toString().toInt()
+            process = 0
             logger.info("${prefix()} totalFileCount: $totalFileCount, totalFileSize ${HumanReadable.size(totalFileSize)}.")
             return super.handleResult(resultMap, key)
         }

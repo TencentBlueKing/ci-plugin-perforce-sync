@@ -6,6 +6,7 @@ import com.perforce.p4java.client.IClientSummary
 import com.perforce.p4java.impl.generic.client.ClientOptions
 import com.tencent.bk.devops.atom.pojo.AtomBaseParam
 import com.tencent.bk.devops.p4sync.task.constants.NONE
+import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ class P4SyncParam(
      * 如: localhost:1666
      * */
     @JsonProperty("p4port")
-    val p4port: String,
+    var p4port: String = "",
     /**
      * HTTP代理地址
      * */
@@ -30,6 +31,24 @@ class P4SyncParam(
     @JsonProperty("ticketId")
     val ticketId: String = "",
     /**
+     * 代码库类型
+     * ID: 按代码库选择
+     * NAME: 按代码库别名输入
+     * URL: 按仓库URL输入
+     */
+    @JsonProperty("repositoryType")
+    val repositoryType: String = RepositoryType.ID.name,
+    /**
+     * 按代码库选择
+     */
+    @JsonProperty("repositoryHashId")
+    var repositoryHashId: String? = "",
+    /**
+     * 按代码库别名输入
+     */
+    @JsonProperty("repositoryName")
+    var repositoryName: String? = "",
+    /**
      * 同步文件版本
      * */
     @JsonProperty("fileRevSpec")
@@ -39,7 +58,7 @@ class P4SyncParam(
      * 如果为空则创建一个临时client
      * */
     @JsonProperty("clientName")
-    val clientName: String,
+    val clientName: String? = null,
 
     /**
      * stream
@@ -181,10 +200,13 @@ class P4SyncParam(
         val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
         else Paths.get(bkWorkspace, rootPath).normalize()
         Files.createDirectories(clientRootPath)
-        logger.info("文件保存路径：$clientRootPath")
+        logger.info("File saving path：$clientRootPath")
+        val cn = clientName ?: "${System.nanoTime()}.tmp"
         return Workspace(
-            name = clientName, description = "create by p4sync",
-            root = clientRootPath.toString(), mappings = view?.lines(),
+            name = cn,
+            description = "create by p4sync",
+            root = clientRootPath.toString(),
+            mappings = view?.lines(),
             stream = stream,
             lineEnd = if (lineEnd == null) IClientSummary.ClientLineEnd.LOCAL
             else IClientSummary.ClientLineEnd.getValue(lineEnd)
@@ -199,12 +221,14 @@ class P4SyncParam(
 
     fun getClient(p4Client: P4Client): IClient {
         val workspace = getWorkspace()
-        val client = p4Client.getClient(clientName)
+        val client = p4Client.getClient(workspace.name)
             ?: p4Client.createClient(workspace)
         if (client.root != workspace.root) {
             throw IllegalArgumentException(
-                "该工作空间已存在，但是当前文件保存路径不是该工作空间之前设置的文件保存路径，" +
-                    "请修改工作空间名称或者修改文件保存路径为${client.root}。注意此路径为绝对路径，请根据构建机工作空间更改。"
+                "The workspace already exists,the current file save path is not the previously set file save path for" +
+                    " the workspace," +
+                    "Change the workspace name or the file saving path to ${client.root}。Note that this path is an " +
+                    "absolute path,Please change according to the builder workspace。"
             )
         }
         return client
