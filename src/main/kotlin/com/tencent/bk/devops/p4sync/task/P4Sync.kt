@@ -363,9 +363,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun saveChangeCommit(changeList: List<IChangelistSummary>, param: P4SyncParam) {
-        if (param.repositoryName.isNullOrBlank()) {
-            param.repositoryName = param.p4port
-        }
         val commitData = changeList.map {
             CommitData(
                 type = ScmType.parse(ScmType.CODE_P4),
@@ -378,7 +375,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 comment = it.description,
                 repoId = param.repositoryHashId,
                 repoName = param.repositoryName,
-                elementId = param.pipelineTaskId
+                elementId = param.pipelineTaskId,
+                url = param.p4port
             )
         }
         DevopsApi().addCommit(commitData)
