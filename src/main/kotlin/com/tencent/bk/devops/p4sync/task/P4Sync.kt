@@ -55,11 +55,8 @@ import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
 import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
-import java.io.FileInputStream
 import java.io.FileReader
-import java.io.InputStreamReader
 import java.io.PrintWriter
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -255,7 +252,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
         var changeList: List<IChangelistSummary>
         val changeSummary = if (client.stream != null) {
             changeList = p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
-            changeList.first()
+            if (changeList.isNotEmpty()) {
+                changeList.first()
+            } else null
         } else {
             changeList = p4Client.getChangeList(P4_CHANGELIST_MAX_MOST_RECENT)
             if (changeList.isNotEmpty()) {
@@ -277,11 +276,14 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
         // 对比历史构建，提取本次构建拉取的commit
         changeList = getDiffChangeLists(changeList, param)
-        // 保存原材料
-        saveBuildMaterial(changeList, param)
-        // 保存提交信息
-        saveChangeCommit(changeList, param)
-
+        if (changeList.isNotEmpty()) {
+            // 保存原材料
+            saveBuildMaterial(changeList, param)
+            // 保存提交信息
+            saveChangeCommit(changeList, param)
+        } else {
+            logger.info("Already up to date,Do not save commit")
+        }
     }
 
     private fun formatChange(change: IChangelistSummary): String {
@@ -390,6 +392,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun getDiffChangeLists(sourceChangeList: List<IChangelistSummary>, param: P4SyncParam): List<IChangelistSummary> {
+        if (sourceChangeList.isEmpty()){
+            return sourceChangeList
+        }
         val result = mutableListOf<IChangelistSummary>()
         with(param) {
             var repositoryConfig: RepositoryConfig? = null
