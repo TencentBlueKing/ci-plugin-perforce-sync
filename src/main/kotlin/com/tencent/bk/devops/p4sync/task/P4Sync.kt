@@ -35,10 +35,8 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TASKID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
-import com.tencent.bk.devops.p4sync.task.constants.BLANK
 import com.tencent.bk.devops.p4sync.task.constants.EMPTY
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGELIST_MAX_MOST_RECENT
-import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGES_FILE_NAME
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHARSET
 import com.tencent.bk.devops.p4sync.task.constants.P4_CLIENT
 import com.tencent.bk.devops.p4sync.task.constants.P4_CONFIG_FILE_NAME
@@ -54,8 +52,6 @@ import com.tencent.bk.devops.p4sync.task.pojo.PipelineBuildMaterial
 import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
 import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.FileReader
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Path
@@ -132,7 +128,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.charset = charsetName
                 result.workspacePath = client.root
                 result.clientName = client.name
-                logPreChange(client, result)
                 saveChanges(p4client, client, result, param)
                 // 保存client信息
                 save(client, p4port, charsetName)
@@ -246,33 +241,19 @@ class P4Sync : TaskAtom<P4SyncParam> {
         result: ExecuteResult,
         param: P4SyncParam
     ) {
-        val changesFilePath = getChangesLogPath(client)
-        val changesOutput = Files.newOutputStream(changesFilePath)
-        val changeWriter = PrintWriter(changesOutput)
-        var changeList: List<IChangelistSummary>
-        val changeSummary = if (client.stream != null) {
-            changeList = p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
-            if (changeList.isNotEmpty()) {
-                changeList.first()
-            } else null
+        var changeList = if (client.stream != null) {
+            p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
         } else {
-            changeList = p4Client.getChangeList(P4_CHANGELIST_MAX_MOST_RECENT)
-            if (changeList.isNotEmpty()) {
-                changeList.first()
-            } else null
+            p4Client.getChangeList(P4_CHANGELIST_MAX_MOST_RECENT)
         }
         // 最新修改
-        changeSummary?.let {
+        changeList.firstOrNull()?.let {
             val logChange = formatChange(it)
             result.headCommitId = it.id.toString()
             result.headCommitComment = it.description
             result.headCommitClientId = it.clientId
             result.headCommitUser = it.username
             logger.info(logChange)
-            changeWriter.use {
-                changeWriter.println(logChange)
-                logger.info("Record change log to [${changesFilePath.toFile().canonicalPath}] success.")
-            }
         }
         // 对比历史构建，提取本次构建拉取的commit
         changeList = getDiffChangeLists(changeList, param)
@@ -293,28 +274,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
         return "Change ${change.id} on ${format.format(date)} by ${change.username}@${change.clientId} '$desc '"
     }
 
-    private fun getChangesLogPath(client: IClient): Path {
-        return Paths.get(client.root, P4_CHANGES_FILE_NAME)
-    }
-
     private fun getP4ConfigPath(client: IClient): Path {
         return Paths.get(client.root, P4_CONFIG_FILE_NAME)
-    }
-
-    private fun logPreChange(client: IClient, result: ExecuteResult) {
-        val changesFilePath = getChangesLogPath(client)
-        val file = changesFilePath.toFile()
-        if (!file.exists()) {
-            return
-        }
-        val reader = BufferedReader(FileReader(file))
-        reader.use {
-            it.lines().findFirst().ifPresent { log ->
-                val change = log.split(BLANK)[1]
-                result.lastCommitId = change
-                logger.info("Pre sync change: $log.")
-            }
-        }
     }
 
     private fun getProperties(param: P4SyncParam): Properties {
@@ -333,6 +294,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     }
                     result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
                 }
+
                 RepositoryType.NAME -> {
                     repositoryName ?: run {
                         result.status = Status.failure
@@ -340,6 +302,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     }
                     result.data[BK_REPO_P4_REPO_NAME] = StringData(repositoryName)
                 }
+
                 RepositoryType.URL -> {
                     result.data[BK_REPO_P4_REPO_PATH] = StringData(p4port)
                     null
@@ -391,8 +354,11 @@ class P4Sync : TaskAtom<P4SyncParam> {
         }
     }
 
-    private fun getDiffChangeLists(sourceChangeList: List<IChangelistSummary>, param: P4SyncParam): List<IChangelistSummary> {
-        if (sourceChangeList.isEmpty()){
+    private fun getDiffChangeLists(
+        sourceChangeList: List<IChangelistSummary>,
+        param: P4SyncParam
+    ): List<IChangelistSummary> {
+        if (sourceChangeList.isEmpty()) {
             return sourceChangeList
         }
         val result = mutableListOf<IChangelistSummary>()
