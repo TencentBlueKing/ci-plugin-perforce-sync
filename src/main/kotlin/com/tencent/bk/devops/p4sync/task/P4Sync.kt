@@ -51,6 +51,7 @@ import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.pojo.CommitData
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
 import com.tencent.bk.devops.p4sync.task.pojo.PipelineBuildMaterial
+import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
 import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -251,7 +252,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         val changesFilePath = getChangesLogPath(client)
         val changesOutput = Files.newOutputStream(changesFilePath)
         val changeWriter = PrintWriter(changesOutput)
-        val changeList: List<IChangelistSummary>
+        var changeList: List<IChangelistSummary>
         val changeSummary = if (client.stream != null) {
             changeList = p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
             changeList.first()
@@ -274,6 +275,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 logger.info("Record change log to [${changesFilePath.toFile().canonicalPath}] success.")
             }
         }
+        // 对比历史构建，提取本次构建拉取的commit
+        changeList = getDiffChangeLists(changeList, param)
         // 保存原材料
         saveBuildMaterial(changeList, param)
         // 保存提交信息
@@ -365,22 +368,55 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun saveChangeCommit(changeList: List<IChangelistSummary>, param: P4SyncParam) {
-        val commitData = changeList.map {
-            CommitData(
-                type = ScmType.parse(ScmType.CODE_P4),
-                pipelineId = param.pipelineId,
-                buildId = param.pipelineBuildId,
-                commit = "${it.id}",
-                committer = it.username,
-                author = it.username,
-                commitTime = it.date.time / 1000, // 单位:秒
-                comment = it.description,
-                repoId = param.repositoryHashId,
-                repoName = param.repositoryName,
-                elementId = param.pipelineTaskId,
-                url = param.p4port
-            )
+        with(param) {
+            val commitData = changeList.map {
+                CommitData(
+                    type = ScmType.parse(ScmType.CODE_P4),
+                    pipelineId = pipelineId,
+                    buildId = pipelineBuildId,
+                    commit = "${it.id}",
+                    committer = it.username,
+                    author = it.username,
+                    commitTime = it.date.time / 1000, // 单位:秒
+                    comment = it.description,
+                    repoId = repositoryHashId,
+                    repoName = repositoryName,
+                    elementId = pipelineTaskId,
+                    url = p4port
+                )
+            }
+            DevopsApi().addCommit(commitData)
         }
-        DevopsApi().addCommit(commitData)
+    }
+
+    private fun getDiffChangeLists(sourceChangeList: List<IChangelistSummary>, param: P4SyncParam): List<IChangelistSummary> {
+        val result = mutableListOf<IChangelistSummary>()
+        with(param) {
+            var repositoryConfig: RepositoryConfig? = null
+            if (repositoryType != RepositoryType.URL.name) {
+                repositoryConfig = RepositoryConfig(
+                    repositoryHashId = repositoryHashId,
+                    repositoryName = repositoryName,
+                    repositoryType = RepositoryType.valueOf(repositoryType)
+                )
+            }
+            // 获取历史信息
+            val latestCommit = DevopsApi().getLatestCommit(
+                pipelineId = pipelineId,
+                elementId = pipelineTaskId,
+                repoId = repositoryConfig?.getURLEncodeRepositoryId() ?: "",
+                repositoryType = repositoryConfig?.repositoryType?.name ?: ""
+            )
+            if (latestCommit.data.isNullOrEmpty()) {
+                return sourceChangeList
+            }
+            val first = latestCommit.data?.first() ?: return sourceChangeList
+            sourceChangeList.forEach {
+                if (it.id > first.commit.toInt()) {
+                    result.add(it)
+                }
+            }
+            return result
+        }
     }
 }

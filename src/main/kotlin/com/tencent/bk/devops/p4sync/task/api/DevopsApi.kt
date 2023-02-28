@@ -75,4 +75,20 @@ class DevopsApi : BaseApi() {
             throw ignore
         }
     }
+    
+    /**
+     * 获取最后一次代码commit信息
+     */
+    fun getLatestCommit(
+        pipelineId: String,
+        elementId: String,
+        repoId: String,
+        repositoryType: String
+    ): Result<List<CommitData>> {
+        val path = "/repository/api/build/commit/getLatestCommit?pipelineId=$pipelineId&elementId=$elementId" +
+            "&repoId=$repoId&repositoryType=$repositoryType"
+        val request = buildGet(path)
+        val responseContent = request(request, "Failure to get latest commit information")
+        return JsonUtil.to(responseContent, object : TypeReference<Result<List<CommitData>>>() {})
+    }
 }
