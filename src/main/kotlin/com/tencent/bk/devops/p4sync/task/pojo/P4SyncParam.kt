@@ -37,7 +37,7 @@ class P4SyncParam(
      * URL: 按仓库URL输入
      */
     @JsonProperty("repositoryType")
-    val repositoryType: String = RepositoryType.ID.name,
+    val repositoryType: String? = RepositoryType.URL.name,
     /**
      * 按代码库选择
      */
