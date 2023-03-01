@@ -68,8 +68,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
     override fun execute(context: AtomContext<P4SyncParam>) {
         val param = context.param
         val result = context.result
-        // 代码库类型若为空则进行默认值处理
-        param.repositoryType = param.repositoryType ?: RepositoryType.URL.name
         checkParam(param, result)
         if (result.status != Status.success) {
             return
@@ -287,6 +285,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
+        // 代码库类型若为空则进行默认值处理
+        param.repositoryType = param.repositoryType ?: RepositoryType.URL.name
         with(param) {
             when (RepositoryType.valueOf(repositoryType!!)) {
                 RepositoryType.ID -> {
