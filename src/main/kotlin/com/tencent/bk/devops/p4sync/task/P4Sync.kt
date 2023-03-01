@@ -285,8 +285,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
+        // 代码库类型若为空则进行默认值处理
+        param.repositoryType = param.repositoryType ?: RepositoryType.URL.name
         with(param) {
-            when (RepositoryType.valueOf(repositoryType)) {
+            when (RepositoryType.valueOf(repositoryType!!)) {
                 RepositoryType.ID -> {
                     repositoryHashId ?: run {
                         result.status = Status.failure
@@ -368,7 +370,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 repositoryConfig = RepositoryConfig(
                     repositoryHashId = repositoryHashId,
                     repositoryName = repositoryName,
-                    repositoryType = RepositoryType.valueOf(repositoryType)
+                    repositoryType = RepositoryType.valueOf(repositoryType!!)
                 )
             }
             // 获取历史信息
