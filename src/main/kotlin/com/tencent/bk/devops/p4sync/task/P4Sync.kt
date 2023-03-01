@@ -68,6 +68,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
     override fun execute(context: AtomContext<P4SyncParam>) {
         val param = context.param
         val result = context.result
+        // 代码库类型若为空则进行默认值处理
+        param.repositoryType = param.repositoryType ?: RepositoryType.URL.name
         checkParam(param, result)
         if (result.status != Status.success) {
             return
@@ -285,19 +287,18 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
-
         with(param) {
-            when (RepositoryType.valueOf(repositoryType ?: RepositoryType.URL.name)) {
+            when (RepositoryType.valueOf(repositoryType!!)) {
                 RepositoryType.ID -> {
-                repositoryHashId ?: run {
-                    result.status = Status.failure
-                    result.message = "The repository hashId cannot be empty"
+                    repositoryHashId ?: run {
+                        result.status = Status.failure
+                        result.message = "The repository hashId cannot be empty"
+                    }
+                    result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
                 }
-                result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
-            }
 
                 RepositoryType.NAME -> {
-                repositoryName ?: run {
+                    repositoryName ?: run {
                         result.status = Status.failure
                         result.message = "The repository name cannot be empty"
                     }
@@ -369,7 +370,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 repositoryConfig = RepositoryConfig(
                     repositoryHashId = repositoryHashId,
                     repositoryName = repositoryName,
-                    repositoryType = RepositoryType.valueOf(repositoryType?: RepositoryType.ID.name)
+                    repositoryType = RepositoryType.valueOf(repositoryType!!)
                 )
             }
             // 获取历史信息
