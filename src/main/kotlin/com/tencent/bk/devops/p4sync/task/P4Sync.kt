@@ -285,18 +285,19 @@ class P4Sync : TaskAtom<P4SyncParam> {
     }
 
     private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
+
         with(param) {
-            when (RepositoryType.valueOf(repositoryType)) {
+            when (RepositoryType.valueOf(repositoryType ?: RepositoryType.URL.name)) {
                 RepositoryType.ID -> {
-                    repositoryHashId ?: run {
-                        result.status = Status.failure
-                        result.message = "The repository hashId cannot be empty"
-                    }
-                    result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
+                repositoryHashId ?: run {
+                    result.status = Status.failure
+                    result.message = "The repository hashId cannot be empty"
                 }
+                result.data[BK_REPO_P4_REPO_ID] = StringData(repositoryHashId)
+            }
 
                 RepositoryType.NAME -> {
-                    repositoryName ?: run {
+                repositoryName ?: run {
                         result.status = Status.failure
                         result.message = "The repository name cannot be empty"
                     }
@@ -368,7 +369,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 repositoryConfig = RepositoryConfig(
                     repositoryHashId = repositoryHashId,
                     repositoryName = repositoryName,
-                    repositoryType = RepositoryType.valueOf(repositoryType)
+                    repositoryType = RepositoryType.valueOf(repositoryType?: RepositoryType.ID.name)
                 )
             }
             // 获取历史信息

@@ -30,7 +30,7 @@ class AuthService(
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = repositoryHashId,
                     repositoryName = repositoryName,
-                    repositoryType = RepositoryType.valueOf(repositoryType)
+                    repositoryType = RepositoryType.valueOf(repositoryType?: RepositoryType.ID.name)
                 )
                 // 获取代码信息
                 val result = devopsApi.getRepository(repositoryConfig)
