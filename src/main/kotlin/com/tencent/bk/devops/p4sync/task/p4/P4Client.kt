@@ -262,9 +262,7 @@ class P4Client(
         try {
             server.createClient(client)
             val ops = GetChangelistsOptions()
-            ops.maxMostRecent = max
-            ops.type = IChangelist.Type.SUBMITTED
-            ops.setOptions("//$clientName/...")
+            ops.setOptions("-m$max","-ssubmitted","//$clientName/...")
             setClient(client)
             return server.getChangelists(null, ops)
         } finally {

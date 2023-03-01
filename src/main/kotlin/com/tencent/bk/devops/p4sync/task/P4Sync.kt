@@ -362,12 +362,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
             return sourceChangeList
         }
         val result = mutableListOf<IChangelistSummary>()
-        // 截取提交内容，应对P4_CHANGELIST_MAX_MOST_RECENT未生效的情况
-        val changeList = if (sourceChangeList.size > 50) {
-            sourceChangeList.subList(0, 50)
-        } else {
-            sourceChangeList
-        }
         with(param) {
             var repositoryConfig: RepositoryConfig? = null
             if (repositoryType != RepositoryType.URL.name) {
@@ -385,10 +379,10 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 repositoryType = repositoryConfig?.repositoryType?.name ?: ""
             )
             if (latestCommit.data.isNullOrEmpty()) {
-                return changeList
+                return sourceChangeList
             }
-            val first = latestCommit.data?.first() ?: return changeList
-            changeList.forEach {
+            val first = latestCommit.data?.first() ?: return sourceChangeList
+            sourceChangeList.forEach {
                 if (it.id > first.commit.toInt()) {
                     result.add(it)
                 }
