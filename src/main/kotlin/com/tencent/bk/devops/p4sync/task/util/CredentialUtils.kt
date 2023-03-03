@@ -46,7 +46,7 @@ object CredentialUtils {
         } catch (e: Exception) {
             logger.warn("Fail to get the credential($credentialId)", e)
             if (showErrorLog) {
-                logger.error("Failure to get ($credentialId) credential,cause：${e.message}")
+                logger.error("Failure to get ($credentialId) credential,cause: ${e.message}")
             }
             throw e
         }

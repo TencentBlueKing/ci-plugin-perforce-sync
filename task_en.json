@@ -1,0 +1,730 @@
+{
+  "atomCode": "PerforceSync",
+  "execution": {
+    "packagePath": "PerforceSync-jar-with-dependencies.jar",
+    "language": "java",
+    "minimumVersion": "1.8",
+    "demands": [],
+    "target": "$bk_java_path -Dfile.encoding=utf8 -jar PerforceSync-jar-with-dependencies.jar"
+  },
+  "releaseInfo": {
+    "projectId": "demo",
+    "name": "PerforceSync",
+    "language": "java",
+    "logoUrl": "${{indexFile(\"logo.png\")}}",
+    "category": "TASK",
+    "classifyCode": "scm",
+    "jobType": "AGENT",
+    "os": [
+      "LINUX",
+      "MACOS",
+      "WINDOWS"
+    ],
+    "labelCodes": [
+    ],
+    "summary": "Full-featured implementation p4 sync",
+    "description": "${{indexFile(\"README.md\")}}",
+    "configInfo": {
+      "frontendType": "NORMAL"
+    },
+    "versionInfo": {
+      "publisher": "admin",
+      "releaseType": "NEW",
+      "version": "1.0.0",
+      "versionContent": "init"
+    }
+  },
+  "input": {
+    "repositoryType": {
+      "label": "Repository",
+      "default": "URL",
+      "desc": "Value Including ID/NAME/URL",
+      "type": "enum-input",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "list": [
+        {
+          "label": "Select by Repository ID",
+          "value": "URL"
+        },
+        {
+          "label": "Select by Repository NAME",
+          "value": "ID"
+        },
+        {
+          "label": "Insert Repository URL",
+          "value": "NAME"
+        }
+      ]
+    },
+    "repositoryHashId": {
+      "label": "Select by Repository ID",
+      "default": "",
+      "placeholder": "Please Select Repository ID",
+      "type": "selector",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "optionsConf": {
+        "searchable": true,
+        "multiple": false,
+        "url": "/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=5000&repositoryType=CODE_P4",
+        "paramId": "repositoryHashId",
+        "paramName": "aliasName",
+        "itemTargetUrl": "http://devops.oa.com/console/codelib/{projectId}/",
+        "itemText": "Repository Association",
+        "hasAddItem": true
+      },
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "ID"
+          }
+        ]
+      }
+    },
+    "repositoryName": {
+      "label": "Select by Repository NAME",
+      "default": "",
+      "placeholder": "Please insert Repository NAME",
+      "type": "vuex-input",
+      "desc": "Description",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "NAME"
+          }
+        ]
+      }
+    },
+    "p4port": {
+      "label": "Perforce server address",
+      "placeholder": "for example: localhost:1666",
+      "type": "vuex-input",
+      "desc": "p4 server address",
+      "default": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "URL"
+          }
+        ]
+      }
+    },
+    "ticketId": {
+      "label": "User credentials",
+      "placeholder": "Please select the corresponding certificate",
+      "type": "selector",
+      "desc": " Credentials support two types of password and ticket, use the credential type user name + password, the password can be entered Perforce password or ticket  ",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "optionsConf": {
+        "searchable": true,
+        "multiple": false,
+        "url": "/ticket/api/user/credentials/{projectId}/hasPermissionList?permission=USE&credentialTypes=USERNAME_PASSWORD&page=1&pageSize=10000",
+        "paramId": "credentialId",
+        "paramName": "credentialId",
+        "itemTargetUrl": "/ticket/{projectId}/createCredential/USERNAME_PASSWORD",
+        "itemText": "Add new credentials",
+        "hasAddItem": true
+      },
+      "rely": {
+        "operation": "AND",
+        "expression": [
+          {
+            "key": "repositoryType",
+            "value": "URL"
+          }
+        ]
+      }
+    },
+    "proxy_flag": {
+      "text": "Use proxy",
+      "default": false,
+      "desc": "",
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
+    "httpProxy": {
+      "label": "HTTP proxy address",
+      "placeholder": "",
+      "type": "vuex-input",
+      "desc": "HTTP proxy address",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "proxy_flag",
+          "value": true
+        }]
+      }
+    },
+    "charsetName": {
+      "label": "Character Set",
+      "type": "selector",
+      "desc": "The character set used by p4Sync when syncing files from the Perforce server. This should be set to 'none' unless connected to a Unicode enabled Perforce server.",
+      "required": false,
+      "default": "none",
+      "options": [{
+        "id": "none",
+        "name": "none"
+      },
+        {
+          "id": "utf8",
+          "name": "utf8"
+        },
+        {
+          "id": "iso8859-1",
+          "name": "iso8859-1"
+        },
+        {
+          "id": "utf16-nobom",
+          "name": "utf16-nobom"
+        },
+        {
+          "id": "shiftjis",
+          "name": "shiftjis"
+        },
+        {
+          "id": "eucjp",
+          "name": "eucjp"
+        },
+        {
+          "id": "winansi",
+          "name": "winansi"
+        },
+        {
+          "id": "winoem",
+          "name": "winoem"
+        },
+        {
+          "id": "macosroman",
+          "name": "macosroman"
+        },
+        {
+          "id": "iso8859-15",
+          "name": "iso8859-15"
+        },
+        {
+          "id": "iso8859-5",
+          "name": "iso8859-5"
+        },
+        {
+          "id": "koi8-r",
+          "name": "koi8-r"
+        },
+        {
+          "id": "cp1251",
+          "name": "cp1251"
+        },
+        {
+          "id": "utf16le",
+          "name": "utf16le"
+        },
+        {
+          "id": "utf16be",
+          "name": "utf16be"
+        },
+        {
+          "id": "utf16le-bom",
+          "name": "utf16le-bom"
+        },
+        {
+          "id": "utf16be-bom",
+          "name": "utf16be-bom"
+        },
+        {
+          "id": "utf16",
+          "name": "utf16"
+        },
+        {
+          "id": "utf8-bom",
+          "name": "utf8-bom"
+        },
+        {
+          "id": "utf32-nobom",
+          "name": "utf32-nobom"
+        },
+        {
+          "id": "utf32le",
+          "name": "utf32le"
+        },
+        {
+          "id": "utf32be",
+          "name": "utf32be"
+        },
+        {
+          "id": "utf16be-bom",
+          "name": "utf16be-bom"
+        },
+        {
+          "id": "utf32le-bom",
+          "name": "utf32le-bom"
+        },
+        {
+          "id": "utf32be-bom",
+          "name": "utf32be-bom"
+        },
+        {
+          "id": "utf32",
+          "name": "utf32"
+        },
+        {
+          "id": "utf8unchecked",
+          "name": "utf8unchecked"
+        },
+        {
+          "id": "utf8unchecked-bom",
+          "name": "utf8unchecked-bom"
+        },
+        {
+          "id": "cp949",
+          "name": "cp949"
+        },
+        {
+          "id": "cp936",
+          "name": "cp936"
+        },
+        {
+          "id": "cp950",
+          "name": "cp950"
+        },
+        {
+          "id": "cp850",
+          "name": "cp850"
+        },
+        {
+          "id": "cp858",
+          "name": "cp858"
+        },
+        {
+          "id": "cp1253",
+          "name": "cp1253"
+        },
+        {
+          "id": "cp737",
+          "name": "cp737"
+        },
+        {
+          "id": "iso8859-7",
+          "name": "iso8859-7"
+        },
+        {
+          "id": "cp1250",
+          "name": "cp1250"
+        },
+        {
+          "id": "cp852",
+          "name": "cp852"
+        },
+        {
+          "id": "iso8859-2",
+          "name": "iso8859-2"
+        }
+      ]
+    },
+    "rootPath": {
+      "label": "File save path",
+      "placeholder": "Please fill in the relative directory of the workspace, if not filled, the default is the workspace directory",
+      "type": "vuex-input",
+      "desc": "There are multiple code checkout plugins in the current pipeline, you need to set this field to resolve conflicts",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "clientName": {
+      "label": "Workspace name",
+      "desc": "will create if not",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "depotMode": {
+      "label": "",
+      "default": "Stream",
+      "type": "enum-input",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "list": [{
+        "label": "Stream",
+        "value": "Stream"
+      },
+        {
+          "label": "Manual",
+          "value": "Manual"
+        }
+      ]
+    },
+    "stream": {
+      "label": "Stream",
+      "placeholder": "for example: //JamCode/main",
+      "type": "vuex-input",
+      "desc": "",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "depotMode",
+          "value": "Stream"
+        }]
+      }
+    },
+    "view": {
+      "label": "View mapping",
+      "placeholder": "//depot/...     //${workspace}/...\n//depot/dir/... //${workspace}/dir2/...",
+      "type": "vuex-textarea",
+      "desc": "The mapping relationship between warehouse and workspace",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "rely": {
+        "operation": "AND",
+        "expression": [{
+          "key": "depotMode",
+          "value": "Manual"
+        }]
+      }
+    },
+    "autoCleanup": {
+      "text": "Auto cleanup and sync",
+      "default": false,
+      "desc": "REPLACE missing/modified files,DELETE generated files.",
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
+    "unshelveId": {
+      "label": "unshelveId",
+      "placeholder": "for example: 526",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "fileRevSpec": {
+      "label": "Synchronize file versions",
+      "placeholder": "file.c#4 \n//depot/proj1/...@21",
+      "type": "vuex-textarea",
+      "desc": "If it is not filled, all files will be synchronized, and Perforce's FileSpec and RevSpec are supported, with one version information per line  ",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "keepGoingOnError": {
+      "text": "Continue running even if errors are encountered",
+      "default": false,
+      "type": "atom-checkbox",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": true
+    },
+    "forceUpdate": {
+      "text": "Forced update ",
+      "default": false,
+      "desc": "p4 sync -f",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "noUpdate": {
+      "text": "Preview mode",
+      "default": false,
+      "desc": "p4 sync -n",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "clientBypass": {
+      "text": "Skip client updates",
+      "default": false,
+      "desc": "p4 sync -k",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "serverBypass": {
+      "text": "Skip server updates ",
+      "default": false,
+      "desc": "p4 sync -p",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "quiet": {
+      "text": "Silent mode",
+      "default": false,
+      "desc": "p4 sync -q",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "safetyCheck": {
+      "text": "Security check",
+      "default": false,
+      "desc": "p4 sync -s",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "max": {
+      "label": "Maximum number of syncs",
+      "desc": "p4 sync -m",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "netMaxWait": {
+      "label": "Synchronization maximum waiting time (ms)",
+      "desc": "Network connection timeout",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "syncOptions"
+    },
+    "batch": {
+      "label": "Batch quantity",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "batchSize": {
+      "label": "Batch Bytes",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "minimum": {
+      "label": "Minimum number of files to use for concurrent synchronization",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "minimumSize": {
+      "label": "Minimum number of bytes to use for concurrent synchronization",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "numberOfThreads": {
+      "label": "Concurrent threads",
+      "type": "vuex-input",
+      "desc": "",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "parallelSyncOptions"
+    },
+    "lineEnd": {
+      "label": "LineEnd",
+      "placeholder": "LOCAL,UNIX,MAC,WIN,SHARE",
+      "desc": "Line ending characters for text files",
+      "type": "vuex-input",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "allWrite": {
+      "text": "AllWrite",
+      "default": false,
+      "desc": "Specifies whether unopened files are always writable. By default, Helix server makes unopened files read-only. ",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "clobber": {
+      "text": "Clobber",
+      "default": true,
+      "desc": "Specifies whether p4 sync overwrites writable but unopened workspace files. (By default, Helix server does not overwrite unopened files if they are writable.)",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "compress": {
+      "text": "Compress",
+      "default": false,
+      "desc": "Specifies whether data is compressed when it is sent between your computer and the Helix server.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "locked": {
+      "text": "Locked",
+      "default": false,
+      "desc": "Specifies whether other users can use, edit, or delete the client workspace specification. A Helix server administrator can override the lock with the -f (force) option.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "modtime": {
+      "text": "Modtime",
+      "default": false,
+      "desc": "For files without the +m (modtime) file type modifier, if modtime is set, the modification date (on the local filesystem) of a newly synced file is the datestamp on the file when the file was submitted to the depot. If nomodtime is set, the modification date is the date and time of sync.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    },
+    "rmdir": {
+      "text": "Rmdir",
+      "default": false,
+      "desc": "Specifies whether p4 sync deletes empty directories in a workspace if all files in the directory have been removed.",
+      "type": "atom-checkbox",
+      "required": false,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false,
+      "groupName": "fileOptions"
+    }
+  },
+  "inputGroups": [{
+    "name": "fileOptions",
+    "label": "File options",
+    "isExpanded": false
+  },
+    {
+      "name": "syncOptions",
+      "label": "Sync options",
+      "isExpanded": false
+    },
+    {
+      "name": "parallelSyncOptions",
+      "label": "Concurrent synchronization option (requires the Perforce server to support the --parallel parameter, and the old version server may not support it)",
+      "isExpanded": false
+    }
+  ],
+  "output": {
+    "BK_CI_P4_REPO_HEAD_CHANGE_ID": {
+      "type": "string",
+      "description": "When pulling the code, the last change id of this build"
+    },
+    "BK_CI_P4_DEPOT_HEAD_CHANGE_COMMENT": {
+      "type": "string",
+      "description": "When pulling the code, the last change comment of this build"
+    },
+    "BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID": {
+      "type": "string",
+      "description": "When pulling the code, the last change comment of this build"
+    },
+    "BK_CI_P4_DEPOT_HEAD_CHANGE_USER": {
+      "type": "string",
+      "description": "The user who built the last change this time"
+    },
+    "BK_CI_P4_DEPOT_LAST_CHANGE_ID": {
+      "type": "string",
+      "description": "When pulling the code, the last change id of the last build"
+    },
+    "BK_CI_P4_DEPOT_WORKSPACE_PATH": {
+      "type": "string",
+      "description": "The local storage path of the current code base"
+    },
+    "BK_CI_P4_DEPOT_PORT": {
+      "type": "string",
+      "description": "The URL of the warehouse"
+    },
+    "BK_CI_P4_DEPOT_STREAM": {
+      "type": "string",
+      "description": "stream name"
+    },
+    "BK_CI_P4_DEPOT_P4_CHARSET": {
+      "type": "string",
+      "description": "Pull the charset used"
+    }
+  }
+}

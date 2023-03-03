@@ -192,15 +192,18 @@ class P4SyncParam(
     val netMaxWait: Int = 60_1000,
 
     @JsonProperty("keepGoingOnError")
-    val keepGoingOnError: Boolean = false
+    val keepGoingOnError: Boolean = false,
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
     private fun getWorkspace(): Workspace {
-        val clientRootPath = if (rootPath == null) Paths.get(bkWorkspace)
-        else Paths.get(bkWorkspace, rootPath).normalize()
+        val clientRootPath = if (rootPath == null) {
+            Paths.get(bkWorkspace)
+        } else {
+            Paths.get(bkWorkspace, rootPath).normalize()
+        }
         Files.createDirectories(clientRootPath)
-        logger.info("File saving path：$clientRootPath")
+        logger.info("File saving path: $clientRootPath")
         val cn = clientName ?: "${System.nanoTime()}.tmp"
         return Workspace(
             name = cn,
@@ -208,14 +211,21 @@ class P4SyncParam(
             root = clientRootPath.toString(),
             mappings = view?.lines(),
             stream = stream,
-            lineEnd = if (lineEnd == null) IClientSummary.ClientLineEnd.LOCAL
-            else IClientSummary.ClientLineEnd.getValue(lineEnd)
-                ?: throw IllegalArgumentException("LineEnd [$lineEnd] Must enum of: LOCAL,UNIX,MAC,WIN,SHARE"),
+            lineEnd = if (lineEnd == null) {
+                IClientSummary.ClientLineEnd.LOCAL
+            } else {
+                IClientSummary.ClientLineEnd.getValue(lineEnd)
+                    ?: throw IllegalArgumentException("LineEnd [$lineEnd] Must enum of: LOCAL,UNIX,MAC,WIN,SHARE")
+            },
             options = ClientOptions(
-                allWrite, clobber,
-                compress, locked, modtime, rmdir
+                allWrite,
+                clobber,
+                compress,
+                locked,
+                modtime,
+                rmdir,
             ),
-            charsetName = charsetName
+            charsetName = charsetName,
         )
     }
 
@@ -227,8 +237,8 @@ class P4SyncParam(
             throw IllegalArgumentException(
                 "The workspace already exists,the current file save path is not the previously set file save path for" +
                     " the workspace," +
-                    "Change the workspace name or the file saving path to ${client.root}。Note that this path is an " +
-                    "absolute path,Please change according to the builder workspace。"
+                    "Change the workspace name or the file saving path to ${client.root}. Note that this path is an " +
+                    "absolute path,Please change according to the builder workspace.",
             )
         }
         return client

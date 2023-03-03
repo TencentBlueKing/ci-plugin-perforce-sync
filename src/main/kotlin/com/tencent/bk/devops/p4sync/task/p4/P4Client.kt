@@ -257,7 +257,7 @@ class P4Client(
         val clientName = "${System.nanoTime()}.tmp"
         summary.stream = streamName
         summary.name = clientName
-        summary.description = "Created by landun (拉取p4) plugin"
+        summary.description = "Created by landun (pull p4) plugin"
         val client = Client(summary, server, false)
         try {
             server.createClient(client)
@@ -285,7 +285,7 @@ class P4Client(
 
     private fun login() {
         if (isLogin()) {
-            logger.info("already logged in：${server.loginStatus}")
+            logger.info("already logged in: ${server.loginStatus}")
             return
         }
         // 插件凭证使用的是用户名+密码类型，且支持ticket和password设置，
@@ -300,9 +300,9 @@ class P4Client(
             server.authTicket = password
         }
         if (!isLogin()) {
-            throw AccessException("The login credentials are incorrect and authentication fails！")
+            throw AccessException("The login credentials are incorrect and authentication fails!")
         }
-        logger.info("login successfully：${server.loginStatus}")
+        logger.info("login successfully: ${server.loginStatus}")
     }
 
     private fun isLogin(): Boolean {
