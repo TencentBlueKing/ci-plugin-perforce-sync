@@ -10,6 +10,7 @@ import com.perforce.p4java.exception.AccessException
 import com.perforce.p4java.exception.RequestException
 import com.perforce.p4java.impl.generic.client.ClientView
 import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping
+import com.perforce.p4java.impl.generic.core.file.FileSpec
 import com.perforce.p4java.impl.mapbased.client.Client
 import com.perforce.p4java.impl.mapbased.client.ClientSummary
 import com.perforce.p4java.impl.mapbased.server.Parameters
@@ -241,18 +242,29 @@ class P4Client(
         }
     }
 
-    fun getChangeList(max: Int): List<IChangelistSummary> {
+    fun getChangeList(
+        max: Int,
+        fileSpecs: List<IFileSpec>
+    ): List<IChangelistSummary> {
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
         ops.type = IChangelist.Type.SUBMITTED
-        return server.getChangelists(null, ops)
+        ops.isLongDesc = true
+        return server.getChangelists(fileSpecs, ops)
     }
 
-    fun getLastChangeByStream(streamName: String): IChangelistSummary {
-        return getChangeListByStream(1, streamName).first()
+    fun getLastChangeByStream(
+        streamName: String,
+        fileSpecs: List<IFileSpec>
+    ): IChangelistSummary {
+        return getChangeListByStream(1, streamName, fileSpecs).first()
     }
 
-    fun getChangeListByStream(max: Int, streamName: String): List<IChangelistSummary> {
+    fun getChangeListByStream(
+        max: Int,
+        streamName: String,
+        fileSpecs: List<IFileSpec>
+    ): List<IChangelistSummary> {
         val summary = ClientSummary()
         val clientName = "${System.nanoTime()}.tmp"
         summary.stream = streamName
@@ -262,9 +274,13 @@ class P4Client(
         try {
             server.createClient(client)
             val ops = GetChangelistsOptions()
-            ops.setOptions("-m$max","-ssubmitted","//$clientName/...")
+            ops.setOptions("-m$max", "-ssubmitted")
             setClient(client)
-            return server.getChangelists(null, ops)
+            // 若同步文件内容为空则填充客户端名称
+            val targetFileSpecs = fileSpecs.ifEmpty {
+                mutableListOf(FileSpec("//${clientName}/..."))
+            }
+            return server.getChangelists(targetFileSpecs, ops)
         } finally {
             deleteClient(clientName)
         }

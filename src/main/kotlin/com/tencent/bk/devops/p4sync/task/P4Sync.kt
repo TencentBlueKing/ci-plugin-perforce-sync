@@ -3,6 +3,7 @@ package com.tencent.bk.devops.p4sync.task
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.core.IChangelistSummary
 import com.perforce.p4java.core.file.FileSpecBuilder
+import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK
 import com.perforce.p4java.impl.mapbased.rpc.stream.helper.RpcSocketHelper
 import com.perforce.p4java.option.client.ParallelSyncOptions
@@ -128,7 +129,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.charset = charsetName
                 result.workspacePath = client.root
                 result.clientName = client.name
-                saveChanges(p4client, client, result, param)
+                val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
+                saveChanges(p4client, client, result, param, fileSpecs)
                 // 保存client信息
                 save(client, p4port, charsetName)
                 if (autoCleanup) {
@@ -142,7 +144,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     batch, batchSize, minimum,
                     minimumSize, numberOfThreads, null
                 )
-                val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
                 val ret = p4client.sync(client, syncOptions, parallelSyncOptions, fileSpecs, keepGoingOnError)
                 result.result = ret
                 // unshelve
@@ -239,12 +240,20 @@ class P4Sync : TaskAtom<P4SyncParam> {
         p4Client: P4Client,
         client: IClient,
         result: ExecuteResult,
-        param: P4SyncParam
+        param: P4SyncParam,
+        fileSpecs: List<IFileSpec>
     ) {
         var changeList = if (client.stream != null) {
-            p4Client.getChangeListByStream(P4_CHANGELIST_MAX_MOST_RECENT, client.stream)
+            p4Client.getChangeListByStream(
+                max = P4_CHANGELIST_MAX_MOST_RECENT,
+                streamName = client.stream,
+                fileSpecs = fileSpecs
+            )
         } else {
-            p4Client.getChangeList(P4_CHANGELIST_MAX_MOST_RECENT)
+            p4Client.getChangeList(
+                max = P4_CHANGELIST_MAX_MOST_RECENT,
+                fileSpecs = fileSpecs
+            )
         }
         // 最新修改
         changeList.firstOrNull()?.let {
@@ -255,6 +264,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
             result.headCommitUser = it.username
             logger.info(logChange)
         }
+        // 指定同步文件版本后需对修改记录进行排序/去重，新纪录前面
+        changeList = changeList.distinctBy { it.id }.sortedBy { -it.id }
         // 对比历史构建，提取本次构建拉取的commit
         changeList = getDiffChangeLists(changeList, param)
         if (changeList.isNotEmpty()) {
@@ -345,7 +356,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     committer = it.username,
                     author = it.username,
                     commitTime = it.date.time / 1000, // 单位:秒
-                    comment = it.description,
+                    comment = it.description.trim(),
                     repoId = repositoryHashId,
                     repoName = repositoryName,
                     elementId = pipelineTaskId,
