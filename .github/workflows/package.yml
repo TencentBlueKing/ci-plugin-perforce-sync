@@ -3,9 +3,10 @@ on:
   push:
     branches:
       - master
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
+  pull_request:
+    branches: [ master]
+    paths:
+      - 'src/**'
 
 env:
   FILENAME: PerforceSync
@@ -37,3 +38,9 @@ jobs:
           name: ${{ env.FILENAME }}.zip
           # A file, directory or wildcard pattern that describes what to upload
           path: ./target/${{ env.FILENAME }}.zip
+      - name: Upload a En Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.FILENAME }}_en.zip
+          # A file, directory or wildcard pattern that describes what to upload
+          path: ./target/${{ env.FILENAME }}_en.zip
