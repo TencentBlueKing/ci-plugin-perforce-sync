@@ -274,7 +274,7 @@ class P4Client(
         try {
             server.createClient(client)
             val ops = GetChangelistsOptions()
-            ops.setOptions("-m$max", "-ssubmitted")
+            ops.setOptions("-m$max", "-ssubmitted","-l")
             setClient(client)
             // 若同步文件内容为空则填充客户端名称
             val targetFileSpecs = fileSpecs.ifEmpty {
