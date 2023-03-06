@@ -48,7 +48,7 @@
         "url": "/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=5000&repositoryType=CODE_P4",
         "paramId": "repositoryHashId",
         "paramName": "aliasName",
-        "itemTargetUrl": "http://devops.oa.com/console/codelib/{projectId}/",
+        "itemTargetUrl": "/codelib/{projectId}/",
         "itemText": "关联代码库",
         "hasAddItem": true
       },
