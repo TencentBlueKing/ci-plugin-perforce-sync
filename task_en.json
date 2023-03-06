@@ -47,15 +47,15 @@
       "list": [
         {
           "label": "Select by Repository ID",
-          "value": "URL"
-        },
-        {
-          "label": "Select by Repository NAME",
           "value": "ID"
         },
         {
-          "label": "Insert Repository URL",
+          "label": "Select by Repository NAME",
           "value": "NAME"
+        },
+        {
+          "label": "Insert Repository URL",
+          "value": "URL"
         }
       ]
     },

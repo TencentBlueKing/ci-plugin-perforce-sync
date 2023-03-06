@@ -19,16 +19,16 @@
       "isSensitive": false,
       "list": [
         {
-          "label": "按仓库URL输入",
-          "value": "URL"
-        },
-        {
           "label": "按代码库选择",
           "value": "ID"
         },
         {
           "label": "按代码库别名输入",
           "value": "NAME"
+        },
+        {
+          "label": "按仓库URL输入",
+          "value": "URL"
         }
       ]
     },
