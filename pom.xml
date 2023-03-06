@@ -4,13 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.tencent.bk.devops.atom</groupId>
+    <parent>
+        <groupId>com.tencent.bk.devops.atom</groupId>
+        <artifactId>sdk-dependencies</artifactId>
+        <version>1.0.1</version>
+    </parent>
+
     <artifactId>PerforceSync</artifactId>
     <version>1.0.0</version>
 
     <properties>
         <!-- 引用的sdk版本，当sdk版本有升级时再修改 -->
-        <sdk.version>1.1.2</sdk.version>
+        <sdk.version>1.1.18</sdk.version>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -23,9 +28,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.tencent.devops.ci-plugins</groupId>
-            <artifactId>java-plugin-sdk</artifactId>
+            <groupId>com.tencent.bk.devops.atom</groupId>
+            <artifactId>java-atom-sdk</artifactId>
             <version>${sdk.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk15to18</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -89,30 +100,6 @@
                             </archive>
                             <descriptors>
                                 <descriptor>src/assembly/jar-with-deps.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/assembly.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>en</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>PerforceSync_en</finalName>
-                            <descriptors>
-                                <descriptor>src/assembly/assembly_en.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>
