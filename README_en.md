@@ -1,4 +1,4 @@
-## Plug-in functionality
+## Plugin functionality
 
 - Supports Stream and classic repositories
 - Supports automatic workspace creation

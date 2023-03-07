@@ -9,7 +9,7 @@
   },
   "releaseInfo": {
     "projectId": "demo",
-    "name": "PerforceSync",
+    "name": "Pull P4",
     "language": "java",
     "logoUrl": "${{indexFile(\"logo.png\")}}",
     "category": "TASK",
