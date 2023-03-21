@@ -204,7 +204,7 @@ class P4SyncParam(
         }
         Files.createDirectories(clientRootPath)
         logger.info("File saving path: $clientRootPath")
-        val cn = clientName ?: "${System.nanoTime()}.tmp"
+        val cn = if (clientName.isNullOrBlank()) "${System.nanoTime()}.tmp" else clientName
         return Workspace(
             name = cn,
             description = "create by p4sync",
