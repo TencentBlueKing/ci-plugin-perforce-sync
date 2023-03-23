@@ -210,7 +210,11 @@ class P4SyncParam(
             description = "create by p4sync",
             root = clientRootPath.toString(),
             mappings = view?.lines(),
-            stream = stream,
+            stream = if (stream.isNullOrEmpty() || stream.trim().isEmpty()) {
+                null
+            } else {
+                stream
+            },
             lineEnd = if (lineEnd == null) {
                 IClientSummary.ClientLineEnd.LOCAL
             } else {
