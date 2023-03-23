@@ -31,6 +31,7 @@ import com.tencent.bk.devops.p4sync.task.constants.NONE
 import com.tencent.bk.devops.p4sync.task.p4.callback.ReconcileStreamCallback
 import com.tencent.bk.devops.p4sync.task.p4.callback.SyncStreamCallback
 import com.tencent.bk.devops.p4sync.task.p4.callback.UnshelveStreamCallback
+import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
 import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
@@ -137,8 +138,14 @@ class P4Client(
         return (batch + batchSize + minimum + minumumSize + numberOfThreads) > 0
     }
 
-    fun getClient(clientName: String): IClient? {
-        return server.getClient(clientName)
+    fun getClient(clientName: String, param: P4SyncParam): IClient? {
+        val client = server.getClient(clientName)
+        if (client != null) {
+            // 已存在工作区，需更新view mapping
+            buildViewMapping(client, param.view?.lines())
+            client.update()
+        }
+        return client
     }
 
     fun createClient(workspace: Workspace): IClient {
@@ -161,17 +168,7 @@ class P4Client(
             summary.ownerName = server.userName
             summary.hostName = InetAddress.getLocalHost().hostName
             val client = Client(summary, server, false)
-            // 非流仓库时，使用ws view
-            if (stream == null && mappings != null) {
-                val clientView = ClientView()
-                clientView.client = client
-                val viewMappings: MutableList<IClientViewMapping> = ArrayList()
-                for ((i, mapping) in mappings.withIndex()) {
-                    viewMappings.add(ClientViewMapping(i, mapping))
-                }
-                clientView.entryList = viewMappings
-                client.clientView = clientView
-            }
+            buildViewMapping(client, mappings)
             return client
         }
     }
@@ -341,5 +338,23 @@ class P4Client(
             server.disconnect()
         } catch (ignore: Exception) {
         }
+    }
+
+    /**
+     * 构建视图映射
+     */
+    private fun buildViewMapping(client: IClient, mapping: List<String>?) {
+        val clientView = ClientView()
+        // 视图映射
+        val viewMappings: MutableList<IClientViewMapping> = ArrayList()
+        clientView.client = client
+        // 非流仓库时，使用ws view
+        if (client.stream == null && mapping != null) {
+            for ((i, value) in mapping.withIndex()) {
+                viewMappings.add(ClientViewMapping(i, value))
+            }
+        }
+        clientView.entryList = viewMappings
+        client.clientView = clientView
     }
 }

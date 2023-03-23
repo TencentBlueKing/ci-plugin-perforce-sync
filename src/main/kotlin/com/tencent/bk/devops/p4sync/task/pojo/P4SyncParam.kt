@@ -235,7 +235,7 @@ class P4SyncParam(
 
     fun getClient(p4Client: P4Client): IClient {
         val workspace = getWorkspace()
-        val client = p4Client.getClient(workspace.name)
+        val client = p4Client.getClient(workspace.name, this)
             ?: p4Client.createClient(workspace)
         if (client.root != workspace.root) {
             throw IllegalArgumentException(
