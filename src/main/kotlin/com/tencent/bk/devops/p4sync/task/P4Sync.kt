@@ -267,7 +267,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
         // 指定同步文件版本后需对修改记录进行排序/去重，新纪录前面
         changeList = changeList.distinctBy { it.id }.sortedBy { -it.id }
         // 对比历史构建，提取本次构建拉取的commit
-        changeList = getDiffChangeLists(changeList, param)
+        changeList = getDiffChangeLists(changeList, param, result)
         if (changeList.isNotEmpty()) {
             // 保存原材料
             saveBuildMaterial(changeList, param)
@@ -369,7 +369,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
 
     private fun getDiffChangeLists(
         sourceChangeList: List<IChangelistSummary>,
-        param: P4SyncParam
+        param: P4SyncParam,
+        executeResult: ExecuteResult
     ): List<IChangelistSummary> {
         if (sourceChangeList.isEmpty()) {
             return sourceChangeList
@@ -395,6 +396,8 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 return sourceChangeList
             }
             val first = latestCommit.data?.first() ?: return sourceChangeList
+            // 上次构建最后的changeId
+            executeResult.lastCommitId = first.commit
             sourceChangeList.forEach {
                 if (it.id > first.commit.toInt()) {
                     result.add(it)
