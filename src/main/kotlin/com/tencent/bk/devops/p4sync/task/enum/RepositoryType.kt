@@ -30,5 +30,5 @@ package com.tencent.bk.devops.p4sync.task.enum
 enum class RepositoryType {
     ID, // 按代码库选择
     NAME, // 按代码库别名输入
-    URL // 按仓库URL输入
+    URL, // 按仓库URL输入
 }

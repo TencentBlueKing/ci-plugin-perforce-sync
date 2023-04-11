@@ -63,7 +63,7 @@ class P4Client(
         syncOptions: SyncOptions,
         parallelSyncOptions: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?,
-        keepGoingOnError: Boolean
+        keepGoingOnError: Boolean,
     ): Boolean {
         setClient(client)
         val callback = SyncStreamCallback(client.server, keepGoingOnError)
@@ -72,7 +72,7 @@ class P4Client(
                 fileSpecs = fileSpecs,
                 syncOpts = syncOptions,
                 pSyncOpts = parallelSyncOptions,
-                callback = callback
+                callback = callback,
             )
         }
         client.sync(fileSpecs, syncOptions, callback, 0)
@@ -83,13 +83,13 @@ class P4Client(
         syncOpts: SyncOptions,
         pSyncOpts: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?,
-        callback: SyncStreamCallback
+        callback: SyncStreamCallback,
     ) {
         if (server.currentClient == null ||
             !server.currentClient.name.equals(this.name, ignoreCase = true)
         ) {
             throw RequestException(
-                "Attempted to sync a client that is not the server's current client"
+                "Attempted to sync a client that is not the server's current client",
             )
         }
 
@@ -98,7 +98,11 @@ class P4Client(
 
         (server as Server).execStreamingMapCommand(
             CmdSpec.SYNC.toString(),
-            syncOptions, null, callback, 0, pSyncOpts.callback
+            syncOptions,
+            null,
+            callback,
+            0,
+            pSyncOpts.callback,
         )
     }
 
@@ -106,7 +110,7 @@ class P4Client(
         syncOpts: SyncOptions,
         pSyncOpts: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?,
-        serverImpl: IServer
+        serverImpl: IServer,
     ): Array<out String>? {
         val parallelOptionsBuilder = StringBuilder()
         parallelOptionsBuilder.append("--parallel=")
@@ -148,9 +152,20 @@ class P4Client(
         return client
     }
 
+    fun getClient(clientName: String): IClient? {
+        return server.getClient(clientName)
+    }
+
     fun createClient(workspace: Workspace): IClient {
         val client = buildClient(workspace)
         val result = server.createClient(client)
+        logger.info(result)
+        return client
+    }
+
+    fun updateClient(workspace: Workspace): IClient {
+        val client = buildClient(workspace)
+        val result = server.updateClient(client)
         logger.info(result)
         return client
     }
@@ -189,8 +204,10 @@ class P4Client(
         }
         val unshelveFilesOptions = UnshelveFilesOptions(false, false)
         client.unshelveChangelist0(
-            id, null,
-            0, unshelveFilesOptions
+            id,
+            null,
+            0,
+            unshelveFilesOptions,
         )
     }
 
@@ -198,11 +215,11 @@ class P4Client(
         sourceChangelistId: Int,
         fileSpecs: List<IFileSpec>?,
         targetChangelistId: Int,
-        opts: UnshelveFilesOptions
+        opts: UnshelveFilesOptions,
     ) {
         if (sourceChangelistId <= 0) {
             throw RequestException(
-                "Source changelist ID must be greater than zero"
+                "Source changelist ID must be greater than zero",
             )
         }
 
@@ -222,11 +239,13 @@ class P4Client(
                 fileSpecs,
                 arrayOf(
                     sourceChangelistString,
-                    targetChangelistString
+                    targetChangelistString,
                 ),
-                serverImpl
+                serverImpl,
             ),
-            null, UnshelveStreamCallback(serverImpl), 0
+            null,
+            UnshelveStreamCallback(serverImpl),
+            0,
         )
     }
 
@@ -241,7 +260,7 @@ class P4Client(
 
     fun getChangeList(
         max: Int,
-        fileSpecs: List<IFileSpec>
+        fileSpecs: List<IFileSpec>,
     ): List<IChangelistSummary> {
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
@@ -252,7 +271,7 @@ class P4Client(
 
     fun getLastChangeByStream(
         streamName: String,
-        fileSpecs: List<IFileSpec>
+        fileSpecs: List<IFileSpec>,
     ): IChangelistSummary {
         return getChangeListByStream(1, streamName, fileSpecs).first()
     }
@@ -260,7 +279,7 @@ class P4Client(
     fun getChangeListByStream(
         max: Int,
         streamName: String,
-        fileSpecs: List<IFileSpec>
+        fileSpecs: List<IFileSpec>,
     ): List<IChangelistSummary> {
         val summary = ClientSummary()
         val clientName = "${System.nanoTime()}.tmp"
@@ -271,11 +290,11 @@ class P4Client(
         try {
             server.createClient(client)
             val ops = GetChangelistsOptions()
-            ops.setOptions("-m$max", "-ssubmitted","-l")
+            ops.setOptions("-m$max", "-ssubmitted", "-l")
             setClient(client)
             // 若同步文件内容为空则填充客户端名称
             val targetFileSpecs = fileSpecs.ifEmpty {
-                mutableListOf(FileSpec("//${clientName}/..."))
+                mutableListOf(FileSpec("//$clientName/..."))
             }
             return server.getChangelists(targetFileSpecs, ops)
         } finally {

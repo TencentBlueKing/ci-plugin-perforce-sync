@@ -196,7 +196,7 @@ class P4SyncParam(
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
-    private fun getWorkspace(): Workspace {
+    fun getWorkspace(): Workspace {
         val clientRootPath = if (rootPath == null) {
             Paths.get(bkWorkspace)
         } else {

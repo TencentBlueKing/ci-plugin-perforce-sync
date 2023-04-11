@@ -1,12 +1,15 @@
 package com.tencent.bk.devops.p4sync.task.constants
 
-val P4_CONFIG_FILE_NAME = ".p4config.cfg"
-val P4_USER = "P4USER"
-val P4_CLIENT = "P4CLIENT"
-val P4_CHARSET = "P4CHARSET"
-val P4_PORT = "P4PORT"
-val NONE = "none"
+const val P4_CONFIG_FILE_NAME = ".p4config.cfg"
+const val P4_USER = "P4USER"
+const val P4_CLIENT = "P4CLIENT"
+const val P4_CHARSET = "P4CHARSET"
+const val P4_PORT = "P4PORT"
+const val NONE = "none"
+const val P4_JAVA_SCHEME = "p4java://"
+const val P4_JAVA_SSL_SCHEME = "p4javassl://"
 const val EMPTY = ""
+
 // 历史changlist最大拉取数量
 const val P4_CHANGELIST_MAX_MOST_RECENT = 50
 
@@ -30,9 +33,12 @@ const val BK_REPO_DEPOT_STREAM = "bk_repo_depot_stream_"
 const val BK_REPO_DEPOT_P4_CHARSET = "bk_repo_depot_p4_charset_"
 const val BK_REPO_P4_CLIENT_NAME = "bk_repo_p4_client_name_"
 const val BK_REPO_LOCAL_PATH = "bk_repo_local_path_"
+
 // 代码库ID
 const val BK_REPO_P4_REPO_ID = "BK_REPO_P4_REPO_ID"
+
 // 代码库别名
 const val BK_REPO_P4_REPO_NAME = "BK_REPO_P4_REPO_NAME"
+
 // 代码库URL
 const val BK_REPO_P4_REPO_PATH = "BK_REPO_P4_REPO_PATH"
