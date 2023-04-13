@@ -9,7 +9,7 @@ data class P4Repository(
     fun getDepotUri(): String {
         return if (p4port.startsWith(SSL_PREFIX)) {
             val uri = p4port.substring(SSL_PREFIX.length)
-            "$P4_JAVA_SSL_SCHEME$uri}"
+            "$P4_JAVA_SSL_SCHEME$uri"
         } else {
             "$P4_JAVA_SCHEME$p4port"
         }
