@@ -52,6 +52,9 @@ object P4SyncUtils {
         if (c1.options.toString() != c2.options.toString()) {
             return false
         }
+        if (c1.hostName != c2.hostName) {
+            return false
+        }
         return true
     }
 
