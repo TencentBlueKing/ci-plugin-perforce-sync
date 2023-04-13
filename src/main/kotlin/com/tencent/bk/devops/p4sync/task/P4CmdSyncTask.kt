@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
 
 class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
     override fun sync(p4Client: P4Client, client: IClient) {
@@ -30,7 +31,7 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
     }
 
     private fun printStream(inputStream: InputStream, error: Boolean = false) {
-        val reader = BufferedReader(InputStreamReader(inputStream))
+        val reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
         reader.use {
             var line = it.readLine()
             while (line != null) {
