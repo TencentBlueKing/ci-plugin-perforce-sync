@@ -21,7 +21,7 @@ class P4SyncTest {
     val password = System.getProperty("P4PWD")
     val ticket = ""
     val clientName = System.getProperty("P4CLIENT")
-    val stream = "//Test/dev"
+    val stream = "//JamCode/main"
     val rootPath = System.getProperty("java.io.tmpdir").plus("tmp").plus("ut3")
 
     private val p4Sync = P4Sync()
@@ -46,7 +46,7 @@ class P4SyncTest {
             charsetName = "utf8",
             autoCleanup = true,
 //            forceUpdate = true,
-            unshelveId = 51
+            unshelveId = 51,
         )
         param.bkWorkspace = rootPath
         syncAndCheck(param)
@@ -58,11 +58,12 @@ class P4SyncTest {
         val param = P4SyncParam(
             p4port = p4port,
             clientName = clientName,
-            rootPath = rootPath,
+            rootPath = "abc",
 //            forceUpdate = true,
-            view = "//demo/... //$clientName/demo/...\n" +
-                "//depot/... //$clientName/depot/..."
+            view = "//depot/... //$clientName/depot/...",
+            charsetName = "utf8",
         )
+        param.bkWorkspace = rootPath
         syncAndCheck(param)
     }
 
@@ -92,7 +93,7 @@ class P4SyncTest {
             locked = true,
             modtime = true,
             rmdir = true,
-            lineEnd = "Local"
+            lineEnd = "Local",
         )
         param.bkWorkspace = rootPath
         syncAndCheck(param)
@@ -106,7 +107,7 @@ class P4SyncTest {
             clientName = clientName,
             rootPath = rootPath,
             stream = stream,
-            unshelveId = 527
+            unshelveId = 527,
         )
         syncAndCheck(param)
     }
@@ -120,7 +121,8 @@ class P4SyncTest {
             rootPath = "dev",
             stream = stream,
             charsetName = "utf8",
-            fileRevSpec = "bug.txt#5\nhello.txt#7"
+            fileRevSpec = "//JamCode/main/Test...@67\n" +
+                "//JamCode/main/Test_1...@67",
 //            forceUpdate = true,
 //            unshelveId = 25
         )
@@ -131,7 +133,10 @@ class P4SyncTest {
     private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
         val credential = ticket ?: password
-        val executeResult = p4Sync.syncWithTry(param, result, userName = userName, credential = credential)
+        val executeResult = p4Sync.createBuilder(param)
+            .userCredential(userName, credential)
+            .build()
+            .execute()
         println(executeResult)
         assertEquals(Status.success, result.status)
     }
@@ -151,7 +156,7 @@ class P4SyncTest {
                     Files.delete(dir)
                     return FileVisitResult.CONTINUE
                 }
-            }
+            },
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.tencent.bk.devops.p4sync.task
 
+import com.perforce.p4java.core.IChangelistSummary
 import com.tencent.bk.devops.p4sync.task.constants.EMPTY
 
 class ExecuteResult {
@@ -14,16 +15,17 @@ class ExecuteResult {
     var charset: String = EMPTY
     var clientName: String = EMPTY
     var result: Boolean = false
+    var changeList = listOf<IChangelistSummary>()
     override fun toString(): String {
-        return "ExecuteResult(headCommitId=$headCommitId, " +
+        return "ExecuteResult(headCommitId=$headCommitId," +
             "headCommitComment=$headCommitComment," +
             " headCommitClientId=$headCommitClientId," +
-            " headCommitUser=$headCommitUser, " +
+            " headCommitUser=$headCommitUser," +
             "lastCommitId=$lastCommitId," +
-            " workspacePath=$workspacePath, " +
-            "depotUrl=$depotUrl, " +
-            "stream=$stream, " +
-            "charset=$charset)" +
-            "clientName=$clientName"
+            " workspacePath=$workspacePath," +
+            "depotUrl=$depotUrl," +
+            "stream=$stream," +
+            "charset=$charset," +
+            "clientName=$clientName)"
     }
 }

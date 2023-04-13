@@ -1,13 +1,11 @@
 package com.tencent.bk.devops.p4sync.task.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.perforce.p4java.client.IClient
 import com.perforce.p4java.client.IClientSummary
 import com.perforce.p4java.impl.generic.client.ClientOptions
 import com.tencent.bk.devops.atom.pojo.AtomBaseParam
 import com.tencent.bk.devops.p4sync.task.constants.NONE
 import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
-import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -196,7 +194,7 @@ class P4SyncParam(
 
 ) : AtomBaseParam() {
     private val logger = LoggerFactory.getLogger(P4SyncParam::class.java)
-    private fun getWorkspace(): Workspace {
+    fun getWorkspace(): Workspace {
         val clientRootPath = if (rootPath == null) {
             Paths.get(bkWorkspace)
         } else {
@@ -207,7 +205,7 @@ class P4SyncParam(
         val cn = if (clientName.isNullOrBlank()) "${System.nanoTime()}.tmp" else clientName
         return Workspace(
             name = cn,
-            description = "create by p4sync",
+            description = "created by bk-ci plugin(PerforceSync).",
             root = clientRootPath.toString(),
             mappings = view?.lines(),
             stream = if (stream.isNullOrEmpty() || stream.trim().isEmpty()) {
@@ -215,7 +213,7 @@ class P4SyncParam(
             } else {
                 stream
             },
-            lineEnd = if (lineEnd == null) {
+            lineEnd = if (lineEnd.isNullOrEmpty()) {
                 IClientSummary.ClientLineEnd.LOCAL
             } else {
                 IClientSummary.ClientLineEnd.getValue(lineEnd)
@@ -231,21 +229,6 @@ class P4SyncParam(
             ),
             charsetName = charsetName,
         )
-    }
-
-    fun getClient(p4Client: P4Client): IClient {
-        val workspace = getWorkspace()
-        val client = p4Client.getClient(workspace.name, this)
-            ?: p4Client.createClient(workspace)
-        if (client.root != workspace.root) {
-            throw IllegalArgumentException(
-                "The workspace already exists,the current file save path is not the previously set file save path for" +
-                    " the workspace," +
-                    "Change the workspace name or the file saving path to ${client.root}. Note that this path is an " +
-                    "absolute path,Please change according to the builder workspace.",
-            )
-        }
-        return client
     }
 
     fun getFileSpecList(): List<String> {

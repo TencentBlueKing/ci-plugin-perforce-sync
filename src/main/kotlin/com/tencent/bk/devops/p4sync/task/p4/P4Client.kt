@@ -24,7 +24,6 @@ import com.perforce.p4java.option.server.GetChangelistsOptions
 import com.perforce.p4java.option.server.TrustOptions
 import com.perforce.p4java.server.CmdSpec
 import com.perforce.p4java.server.IOptionsServer
-import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
@@ -32,7 +31,7 @@ import com.tencent.bk.devops.p4sync.task.p4.callback.ReconcileStreamCallback
 import com.tencent.bk.devops.p4sync.task.p4.callback.SyncStreamCallback
 import com.tencent.bk.devops.p4sync.task.p4.callback.UnshelveStreamCallback
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
-import org.apache.commons.lang3.ArrayUtils
+import com.tencent.bk.devops.p4sync.task.util.P4SyncUtils
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.Properties
@@ -45,7 +44,7 @@ class P4Client(
     charsetName: String = NONE,
     properties: Properties,
 ) : AutoCloseable {
-    private val server: IOptionsServer = getOptionsServer(uri, properties)
+    val server: IOptionsServer = getOptionsServer(uri, properties)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
 
     init {
@@ -63,16 +62,16 @@ class P4Client(
         syncOptions: SyncOptions,
         parallelSyncOptions: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?,
-        keepGoingOnError: Boolean
+        keepGoingOnError: Boolean,
     ): Boolean {
         setClient(client)
         val callback = SyncStreamCallback(client.server, keepGoingOnError)
-        if (parallelSyncOptions.needParallel()) {
+        if (P4SyncUtils.needParallel(parallelSyncOptions)) {
             client.syncParallel2(
                 fileSpecs = fileSpecs,
                 syncOpts = syncOptions,
                 pSyncOpts = parallelSyncOptions,
-                callback = callback
+                callback = callback,
             )
         }
         client.sync(fileSpecs, syncOptions, callback, 0)
@@ -83,59 +82,31 @@ class P4Client(
         syncOpts: SyncOptions,
         pSyncOpts: ParallelSyncOptions,
         fileSpecs: List<IFileSpec>?,
-        callback: SyncStreamCallback
+        callback: SyncStreamCallback,
     ) {
         if (server.currentClient == null ||
             !server.currentClient.name.equals(this.name, ignoreCase = true)
         ) {
             throw RequestException(
-                "Attempted to sync a client that is not the server's current client"
+                "Attempted to sync a client that is not the server's current client",
             )
         }
 
-        val syncOptions =
-            buildParallelOptions(serverImpl = server, fileSpecs = fileSpecs, syncOpts = syncOpts, pSyncOpts = pSyncOpts)
+        val syncOptions = P4SyncUtils.buildOptions(
+            serverImpl = server,
+            fileSpecs = fileSpecs,
+            syncOpts = syncOpts,
+            pSyncOpts = pSyncOpts,
+        )
 
         (server as Server).execStreamingMapCommand(
             CmdSpec.SYNC.toString(),
-            syncOptions, null, callback, 0, pSyncOpts.callback
+            syncOptions,
+            null,
+            callback,
+            0,
+            pSyncOpts.callback,
         )
-    }
-
-    private fun buildParallelOptions(
-        syncOpts: SyncOptions,
-        pSyncOpts: ParallelSyncOptions,
-        fileSpecs: List<IFileSpec>?,
-        serverImpl: IServer
-    ): Array<out String>? {
-        val parallelOptionsBuilder = StringBuilder()
-        parallelOptionsBuilder.append("--parallel=")
-        if (pSyncOpts.numberOfThreads > 0) {
-            parallelOptionsBuilder.append("threads=" + pSyncOpts.numberOfThreads)
-        } else {
-            parallelOptionsBuilder.append("threads=0")
-        }
-        if (pSyncOpts.minimum > 0) {
-            parallelOptionsBuilder.append(",min=" + pSyncOpts.minimum)
-        }
-        if (pSyncOpts.minumumSize > 0) {
-            parallelOptionsBuilder.append(",minsize=" + pSyncOpts.minumumSize)
-        }
-        if (pSyncOpts.batch > 0) {
-            parallelOptionsBuilder.append(",batch=" + pSyncOpts.batch)
-        }
-        if (pSyncOpts.batchSize > 0) {
-            parallelOptionsBuilder.append(",batchsize=" + pSyncOpts.batchSize)
-        }
-
-        val syncOptions =
-            Parameters.processParameters(syncOpts, fileSpecs, serverImpl)
-        val parallelOptions = parallelOptionsBuilder.toString()
-        return ArrayUtils.addAll(syncOptions, parallelOptions)
-    }
-
-    private fun ParallelSyncOptions.needParallel(): Boolean {
-        return (batch + batchSize + minimum + minumumSize + numberOfThreads) > 0
     }
 
     fun getClient(clientName: String, param: P4SyncParam): IClient? {
@@ -148,9 +119,20 @@ class P4Client(
         return client
     }
 
+    fun getClient(clientName: String): IClient? {
+        return server.getClient(clientName)
+    }
+
     fun createClient(workspace: Workspace): IClient {
         val client = buildClient(workspace)
         val result = server.createClient(client)
+        logger.info(result)
+        return client
+    }
+
+    fun updateClient(workspace: Workspace): IClient {
+        val client = buildClient(workspace)
+        val result = server.updateClient(client)
         logger.info(result)
         return client
     }
@@ -189,8 +171,10 @@ class P4Client(
         }
         val unshelveFilesOptions = UnshelveFilesOptions(false, false)
         client.unshelveChangelist0(
-            id, null,
-            0, unshelveFilesOptions
+            id,
+            null,
+            0,
+            unshelveFilesOptions,
         )
     }
 
@@ -198,11 +182,11 @@ class P4Client(
         sourceChangelistId: Int,
         fileSpecs: List<IFileSpec>?,
         targetChangelistId: Int,
-        opts: UnshelveFilesOptions
+        opts: UnshelveFilesOptions,
     ) {
         if (sourceChangelistId <= 0) {
             throw RequestException(
-                "Source changelist ID must be greater than zero"
+                "Source changelist ID must be greater than zero",
             )
         }
 
@@ -222,11 +206,13 @@ class P4Client(
                 fileSpecs,
                 arrayOf(
                     sourceChangelistString,
-                    targetChangelistString
+                    targetChangelistString,
                 ),
-                serverImpl
+                serverImpl,
             ),
-            null, UnshelveStreamCallback(serverImpl), 0
+            null,
+            UnshelveStreamCallback(serverImpl),
+            0,
         )
     }
 
@@ -241,7 +227,7 @@ class P4Client(
 
     fun getChangeList(
         max: Int,
-        fileSpecs: List<IFileSpec>
+        fileSpecs: List<IFileSpec>,
     ): List<IChangelistSummary> {
         val ops = GetChangelistsOptions()
         ops.maxMostRecent = max
@@ -252,7 +238,7 @@ class P4Client(
 
     fun getLastChangeByStream(
         streamName: String,
-        fileSpecs: List<IFileSpec>
+        fileSpecs: List<IFileSpec>,
     ): IChangelistSummary {
         return getChangeListByStream(1, streamName, fileSpecs).first()
     }
@@ -260,22 +246,22 @@ class P4Client(
     fun getChangeListByStream(
         max: Int,
         streamName: String,
-        fileSpecs: List<IFileSpec>
+        fileSpecs: List<IFileSpec>,
     ): List<IChangelistSummary> {
         val summary = ClientSummary()
         val clientName = "${System.nanoTime()}.tmp"
         summary.stream = streamName
         summary.name = clientName
-        summary.description = "Created by landun (pull p4) plugin"
+        summary.description = "Created by bk-ci plugin(PerforceSync)."
         val client = Client(summary, server, false)
         try {
             server.createClient(client)
             val ops = GetChangelistsOptions()
-            ops.setOptions("-m$max", "-ssubmitted","-l")
+            ops.setOptions("-m$max", "-ssubmitted", "-l")
             setClient(client)
             // 若同步文件内容为空则填充客户端名称
             val targetFileSpecs = fileSpecs.ifEmpty {
-                mutableListOf(FileSpec("//${clientName}/..."))
+                mutableListOf(FileSpec("//$clientName/..."))
             }
             return server.getChangelists(targetFileSpecs, ops)
         } finally {

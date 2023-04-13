@@ -32,10 +32,13 @@ data class MoreSyncOptions(
     /**
      * 同步最大数量 -m
      * */
-    val max: Int = 0
+    val max: Int = 0,
 ) : SyncOptions(
-    forceUpdate, noUpdate, clientBypass,
-    serverBypass, safetyCheck
+    forceUpdate,
+    noUpdate,
+    clientBypass,
+    serverBypass,
+    safetyCheck,
 ) {
     companion object {
         const val OPTIONS_SPECS = "b:f b:n b:k b:p b:q b:s i:m"
@@ -47,12 +50,14 @@ data class MoreSyncOptions(
 
     override fun processOptions(server: IServer?): MutableList<String> {
         return processFields(
-            OPTIONS_SPECS, this.forceUpdate,
+            OPTIONS_SPECS,
+            this.forceUpdate,
             this.noUpdate,
             this.clientBypass,
             this.serverBypass,
             this.quiet,
-            this.safetyCheck, max
+            this.safetyCheck,
+            max,
         )
     }
 }
