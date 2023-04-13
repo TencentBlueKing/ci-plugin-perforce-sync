@@ -18,6 +18,7 @@ import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.p4.P4Client
 import com.tencent.bk.devops.p4sync.task.p4.Workspace
 import com.tencent.bk.devops.p4sync.task.pojo.P4Repository
+import com.tencent.bk.devops.p4sync.task.util.P4SyncUtils
 import org.slf4j.LoggerFactory
 import java.io.PrintWriter
 import java.nio.file.Files
@@ -27,19 +28,20 @@ import java.util.Properties
 
 open class SyncTask(builder: Builder) {
 
-    private var charset: String
-    private var properties: Properties
-    private var userName: String
-    private var password: String? = null
-    private var repository: P4Repository
-    private var syncOptions: MoreSyncOptions
-    private var parallelSyncOptions: ParallelSyncOptions
-    private var workspace: Workspace
-    private var fileSpecs: List<IFileSpec>
-    private var continueOnError = false
-    private var autoCleanup = false
-    private var unshelveId: Int? = null
-    private val listeners: List<SyncTaskListener>
+    protected var charset: String
+    protected var properties: Properties
+    protected var userName: String
+    protected var password: String? = null
+    protected var repository: P4Repository
+    protected var syncOptions: MoreSyncOptions
+    protected var parallelSyncOptions: ParallelSyncOptions
+    protected var workspace: Workspace
+    protected var fileSpecs: List<IFileSpec>
+    protected var continueOnError = false
+    protected var autoCleanup = false
+    protected var unshelveId: Int? = null
+    protected val listeners: List<SyncTaskListener>
+    protected var deleteClientAfterTask = false
 
     init {
         checkNotNull(builder.userName)
@@ -58,6 +60,7 @@ open class SyncTask(builder: Builder) {
         this.fileSpecs = builder.fileSpecs
         this.continueOnError = builder.continueOnError
         this.listeners = builder.listeners
+        this.deleteClientAfterTask = builder.deleteClientAfterTask
     }
 
     fun execute(): ExecuteResult {
@@ -68,29 +71,44 @@ open class SyncTask(builder: Builder) {
             charset,
             properties,
         )
-        p4Client.use { p4Client ->
-            val clientName = workspace.name
-            val client = p4Client.getClient(clientName)
-            val newClient = if (client != null) {
-                // update
-                p4Client.updateClient(workspace)
-            } else {
-                p4Client.createClient(workspace)
-            }
+        try {
+            val client = createOrUpdateClient(p4Client, workspace)
             if (autoCleanup) {
-                p4Client.cleanup(newClient)
+                p4Client.cleanup(client)
             }
             listeners.forEach { it.before() }
             val executeResult = buildExecuteResult(p4Client, fileSpecs)
-            sync(p4Client, newClient)
+            sync(p4Client, client)
             listeners.forEach { it.after(executeResult) }
             unshelveId?.let {
-                logger.info("unshelve id $unshelveId.")
-                p4Client.unshelve(it, newClient)
+                logger.info("Unshelve id $unshelveId.")
+                p4Client.unshelve(it, client)
             }
-            saveConfig(newClient, repository.p4port, charset)
+            saveConfig(client, repository.p4port, charset)
             return executeResult
+        } finally {
+            if (deleteClientAfterTask) {
+                val clientName = workspace.name
+                p4Client.deleteClient(clientName)
+                logger.info("Delete client $clientName")
+            }
+            p4Client.close()
         }
+    }
+
+    private fun createOrUpdateClient(p4Client: P4Client, workspace: Workspace): IClient {
+        var client = p4Client.getClient(workspace.name)
+        if (client == null) {
+            client = p4Client.createClient(workspace)
+            logger.info("Create new client ${workspace.name}")
+        } else {
+            val nowClient = P4SyncUtils.workspaceToClient(workspace, p4Client.server)
+            if (!P4SyncUtils.compareClients(nowClient, client)) {
+                logger.info("Client has change,update client ${client.name}.")
+                client = p4Client.updateClient(workspace)
+            }
+        }
+        return client
     }
 
     private fun saveConfig(client: IClient, uri: String, charsetName: String) {
@@ -236,7 +254,12 @@ open class SyncTask(builder: Builder) {
     companion object {
         private val logger = LoggerFactory.getLogger(SyncTask::class.java)
         private fun supportP4Cmd(): Boolean {
-            return false
+            return try {
+                Runtime.getRuntime().exec("p4 -V")
+                true
+            } catch (ignore: Exception) {
+                false
+            }
         }
     }
 }

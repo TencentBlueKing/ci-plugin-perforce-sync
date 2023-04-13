@@ -30,15 +30,15 @@ class P4Sync : TaskAtom<P4SyncParam> {
             // 设置同步任务
             val syncTask = createBuilder(param)
                 .userCredential(credentialInfo[0], credentialInfo[1])
-                .addListener(SetOutputListener(context))
                 .addListener(PipelineListener(param))
+                .addListener(SetOutputListener(context))
                 .build()
             // 开始同步
             syncTask.execute()
         }
     }
 
-    private fun createBuilder(p4SyncParam: P4SyncParam): SyncTask.Builder {
+    fun createBuilder(p4SyncParam: P4SyncParam): SyncTask.Builder {
         with(p4SyncParam) {
             // 获取仓库信息
             val repository = P4Repository(p4port)

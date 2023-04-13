@@ -24,7 +24,6 @@ import com.perforce.p4java.option.server.GetChangelistsOptions
 import com.perforce.p4java.option.server.TrustOptions
 import com.perforce.p4java.server.CmdSpec
 import com.perforce.p4java.server.IOptionsServer
-import com.perforce.p4java.server.IServer
 import com.perforce.p4java.server.IServerAddress
 import com.perforce.p4java.server.ServerFactory.getOptionsServer
 import com.tencent.bk.devops.p4sync.task.constants.NONE
@@ -32,7 +31,7 @@ import com.tencent.bk.devops.p4sync.task.p4.callback.ReconcileStreamCallback
 import com.tencent.bk.devops.p4sync.task.p4.callback.SyncStreamCallback
 import com.tencent.bk.devops.p4sync.task.p4.callback.UnshelveStreamCallback
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
-import org.apache.commons.lang3.ArrayUtils
+import com.tencent.bk.devops.p4sync.task.util.P4SyncUtils
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.Properties
@@ -45,7 +44,7 @@ class P4Client(
     charsetName: String = NONE,
     properties: Properties,
 ) : AutoCloseable {
-    private val server: IOptionsServer = getOptionsServer(uri, properties)
+    val server: IOptionsServer = getOptionsServer(uri, properties)
     private val logger = LoggerFactory.getLogger(P4Client::class.java)
 
     init {
@@ -67,7 +66,7 @@ class P4Client(
     ): Boolean {
         setClient(client)
         val callback = SyncStreamCallback(client.server, keepGoingOnError)
-        if (parallelSyncOptions.needParallel()) {
+        if (P4SyncUtils.needParallel(parallelSyncOptions)) {
             client.syncParallel2(
                 fileSpecs = fileSpecs,
                 syncOpts = syncOptions,
@@ -93,8 +92,12 @@ class P4Client(
             )
         }
 
-        val syncOptions =
-            buildParallelOptions(serverImpl = server, fileSpecs = fileSpecs, syncOpts = syncOpts, pSyncOpts = pSyncOpts)
+        val syncOptions = P4SyncUtils.buildOptions(
+            serverImpl = server,
+            fileSpecs = fileSpecs,
+            syncOpts = syncOpts,
+            pSyncOpts = pSyncOpts,
+        )
 
         (server as Server).execStreamingMapCommand(
             CmdSpec.SYNC.toString(),
@@ -104,42 +107,6 @@ class P4Client(
             0,
             pSyncOpts.callback,
         )
-    }
-
-    private fun buildParallelOptions(
-        syncOpts: SyncOptions,
-        pSyncOpts: ParallelSyncOptions,
-        fileSpecs: List<IFileSpec>?,
-        serverImpl: IServer,
-    ): Array<out String>? {
-        val parallelOptionsBuilder = StringBuilder()
-        parallelOptionsBuilder.append("--parallel=")
-        if (pSyncOpts.numberOfThreads > 0) {
-            parallelOptionsBuilder.append("threads=" + pSyncOpts.numberOfThreads)
-        } else {
-            parallelOptionsBuilder.append("threads=0")
-        }
-        if (pSyncOpts.minimum > 0) {
-            parallelOptionsBuilder.append(",min=" + pSyncOpts.minimum)
-        }
-        if (pSyncOpts.minumumSize > 0) {
-            parallelOptionsBuilder.append(",minsize=" + pSyncOpts.minumumSize)
-        }
-        if (pSyncOpts.batch > 0) {
-            parallelOptionsBuilder.append(",batch=" + pSyncOpts.batch)
-        }
-        if (pSyncOpts.batchSize > 0) {
-            parallelOptionsBuilder.append(",batchsize=" + pSyncOpts.batchSize)
-        }
-
-        val syncOptions =
-            Parameters.processParameters(syncOpts, fileSpecs, serverImpl)
-        val parallelOptions = parallelOptionsBuilder.toString()
-        return ArrayUtils.addAll(syncOptions, parallelOptions)
-    }
-
-    private fun ParallelSyncOptions.needParallel(): Boolean {
-        return (batch + batchSize + minimum + minumumSize + numberOfThreads) > 0
     }
 
     fun getClient(clientName: String, param: P4SyncParam): IClient? {
@@ -285,7 +252,7 @@ class P4Client(
         val clientName = "${System.nanoTime()}.tmp"
         summary.stream = streamName
         summary.name = clientName
-        summary.description = "Created by landun (pull p4) plugin"
+        summary.description = "Created by bk-ci plugin(PerforceSync)."
         val client = Client(summary, server, false)
         try {
             server.createClient(client)

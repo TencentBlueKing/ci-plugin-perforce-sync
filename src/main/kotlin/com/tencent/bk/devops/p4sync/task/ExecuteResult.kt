@@ -17,15 +17,15 @@ class ExecuteResult {
     var result: Boolean = false
     var changeList = listOf<IChangelistSummary>()
     override fun toString(): String {
-        return "ExecuteResult(headCommitId=$headCommitId, " +
+        return "ExecuteResult(headCommitId=$headCommitId," +
             "headCommitComment=$headCommitComment," +
             " headCommitClientId=$headCommitClientId," +
-            " headCommitUser=$headCommitUser, " +
+            " headCommitUser=$headCommitUser," +
             "lastCommitId=$lastCommitId," +
-            " workspacePath=$workspacePath, " +
-            "depotUrl=$depotUrl, " +
-            "stream=$stream, " +
-            "charset=$charset)" +
-            "clientName=$clientName"
+            " workspacePath=$workspacePath," +
+            "depotUrl=$depotUrl," +
+            "stream=$stream," +
+            "charset=$charset," +
+            "clientName=$clientName)"
     }
 }
