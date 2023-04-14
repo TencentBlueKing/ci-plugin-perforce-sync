@@ -217,11 +217,11 @@ class P4Client(
     }
 
     fun setCharset(charsetName: String) {
-        if (server.supportsUnicode() && charsetName != NONE) {
+        if (isUnicodeServer() && charsetName != NONE) {
             logger.info("Connection use Charset $charsetName.")
             server.charsetName = charsetName
         } else {
-            logger.info("Server not supports unicode,charset $charsetName was ignore.")
+            logger.info("Charset $charsetName was ignore.")
         }
     }
 
@@ -280,6 +280,10 @@ class P4Client(
         val files = FileSpecBuilder.makeFileSpecList(path)
         setClient(client)
         client.reconcileFiles(files, cleanupOpt, ReconcileStreamCallback(client.server), 0)
+    }
+
+    fun isUnicodeServer(): Boolean {
+        return server.supportsUnicode()
     }
 
     private fun login() {

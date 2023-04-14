@@ -1,11 +1,13 @@
 package com.tencent.bk.devops.p4sync.task
 
+import com.perforce.p4java.CharsetDefs
 import com.perforce.p4java.client.IClient
 import com.perforce.p4java.core.IChangelistSummary
 import com.perforce.p4java.core.file.IFileSpec
 import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs
 import com.perforce.p4java.impl.mapbased.rpc.stream.helper.RpcSocketHelper
 import com.perforce.p4java.option.client.ParallelSyncOptions
+import com.perforce.p4java.server.PerforceCharsets
 import com.tencent.bk.devops.p4sync.task.constants.EMPTY
 import com.tencent.bk.devops.p4sync.task.constants.NONE
 import com.tencent.bk.devops.p4sync.task.constants.P4_CHANGELIST_MAX_MOST_RECENT
@@ -71,6 +73,10 @@ open class SyncTask(builder: Builder) {
             charset,
             properties,
         )
+        if (p4Client.isUnicodeServer() && charset == NONE) {
+            // set default charset
+            charset = PerforceCharsets.getP4CharsetName(CharsetDefs.DEFAULT_NAME)
+        }
         try {
             val client = createOrUpdateClient(p4Client, workspace)
             if (autoCleanup) {

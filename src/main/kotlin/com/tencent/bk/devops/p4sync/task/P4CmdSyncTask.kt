@@ -8,6 +8,7 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
+import kotlin.concurrent.thread
 
 class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
     override fun sync(p4Client: P4Client, client: IClient) {
@@ -16,17 +17,32 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
             fileSpecs = fileSpecs,
             syncOpts = syncOptions,
             pSyncOpts = parallelSyncOptions,
-        ).joinToString(" ")
-        val syncCmd = "p4 -c ${client.name} -p ${repository.p4port} -C $charset -u $userName sync $opts"
-        logger.info("# $syncCmd")
-        val process = Runtime.getRuntime().exec(syncCmd)
-        printStream(process.inputStream)
-        if (process.waitFor() != 0) {
-            printErrorStream(process.errorStream)
-            error("Sync failed.")
-        } else {
-            // Alert msg(File(s) up-to-date.) is in stderr
-            printStream(process.errorStream)
+        )
+        val command = mutableListOf<String>(
+            "p4",
+            "-c",
+            client.name,
+            "-p",
+            repository.p4port,
+            "-C",
+            charset,
+            "-u",
+            userName,
+            "sync",
+        )
+        command.addAll(opts)
+        val commandStr = command.joinToString(" ")
+        logger.info("# $commandStr")
+        val pb = ProcessBuilder()
+        pb.command(command)
+        pb.redirectErrorStream(true)
+        val process = pb.start()
+        thread {
+            printStream(process.inputStream)
+        }
+        val ev = process.waitFor()
+        if (ev != 0) {
+            error("Sync failed,exit: $ev.")
         }
     }
 
@@ -43,10 +59,6 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
                 line = it.readLine()
             }
         }
-    }
-
-    private fun printErrorStream(errorInput: InputStream) {
-        printStream(errorInput, true)
     }
 
     companion object {
