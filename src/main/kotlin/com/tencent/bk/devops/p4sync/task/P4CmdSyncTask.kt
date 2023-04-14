@@ -20,11 +20,11 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
         val syncCmd = "p4 -c ${client.name} -p ${repository.p4port} -C $charset -u $userName sync $opts"
         logger.info("# $syncCmd")
         val process = Runtime.getRuntime().exec(syncCmd)
+        printStream(process.inputStream)
         if (process.waitFor() != 0) {
             printErrorStream(process.errorStream)
             error("Sync failed.")
         } else {
-            printStream(process.inputStream)
             // Alert msg(File(s) up-to-date.) is in stderr
             printStream(process.errorStream)
         }
