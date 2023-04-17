@@ -32,7 +32,8 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
         )
         command.addAll(opts)
         val commandStr = command.joinToString(" ")
-        logger.info("##[command]# $commandStr")
+        // 为了展示终端shell命令样式，所以这里直接打印到终端，而不通过日志框架。
+        println("##[command]# $commandStr")
         val pb = ProcessBuilder()
         pb.command(command)
         pb.redirectErrorStream(true)
