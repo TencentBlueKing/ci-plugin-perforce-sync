@@ -32,7 +32,7 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
         )
         command.addAll(opts)
         val commandStr = command.joinToString(" ")
-        logger.info("# $commandStr")
+        logger.info("##[command]# $commandStr")
         val pb = ProcessBuilder()
         pb.command(command)
         pb.redirectErrorStream(true)
