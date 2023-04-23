@@ -166,6 +166,7 @@ class P4Client(
     }
 
     fun unshelve(id: Int, client: IClient) {
+        setClient(client)
         if (!isLogin()) {
             login()
         }
