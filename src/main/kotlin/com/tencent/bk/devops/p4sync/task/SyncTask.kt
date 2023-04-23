@@ -63,6 +63,7 @@ open class SyncTask(builder: Builder) {
         this.continueOnError = builder.continueOnError
         this.listeners = builder.listeners
         this.deleteClientAfterTask = builder.deleteClientAfterTask
+        this.unshelveId = builder.unshelveId
     }
 
     fun execute(): ExecuteResult {
