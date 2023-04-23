@@ -189,6 +189,7 @@ open class SyncTask(builder: Builder) {
         var continueOnError = false
         var listeners = mutableListOf<SyncTaskListener>()
         var deleteClientAfterTask = false
+        var unshelveId: Int? = null
 
         fun charset(charset: String): Builder {
             this.charset = charset
@@ -249,6 +250,11 @@ open class SyncTask(builder: Builder) {
 
         fun deleteClientAfterTask(on: Boolean): Builder {
             this.deleteClientAfterTask = on
+            return this
+        }
+
+        fun unshelveId(unshelveId: Int): Builder {
+            this.unshelveId = unshelveId
             return this
         }
 

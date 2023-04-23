@@ -69,6 +69,9 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 .parallelSyncOptions(parallelSyncOptions)
                 .charset(charsetName)
                 .deleteClientAfterTask(clientName == null)
+            if (unshelveId != null) {
+                builder.unshelveId(unshelveId)
+            }
             if (httpProxy != null && httpProxy.contains(':')) {
                 val proxyParam = httpProxy.split(':')
                 builder.useProxy(proxyParam[0], proxyParam[1].toInt())
