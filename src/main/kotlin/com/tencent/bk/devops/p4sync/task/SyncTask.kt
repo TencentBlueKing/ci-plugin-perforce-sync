@@ -64,6 +64,7 @@ open class SyncTask(builder: Builder) {
         this.listeners = builder.listeners
         this.deleteClientAfterTask = builder.deleteClientAfterTask
         this.unshelveId = builder.unshelveId
+        this.autoCleanup = builder.autoCleanup
     }
 
     fun execute(): ExecuteResult {
@@ -191,6 +192,7 @@ open class SyncTask(builder: Builder) {
         var listeners = mutableListOf<SyncTaskListener>()
         var deleteClientAfterTask = false
         var unshelveId: Int? = null
+        var autoCleanup = false
 
         fun charset(charset: String): Builder {
             this.charset = charset
@@ -256,6 +258,11 @@ open class SyncTask(builder: Builder) {
 
         fun unshelveId(unshelveId: Int): Builder {
             this.unshelveId = unshelveId
+            return this
+        }
+
+        fun autoCleanup(autoCleanup: Boolean): Builder {
+            this.autoCleanup = autoCleanup
             return this
         }
 

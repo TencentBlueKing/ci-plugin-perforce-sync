@@ -69,6 +69,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 .parallelSyncOptions(parallelSyncOptions)
                 .charset(charsetName)
                 .deleteClientAfterTask(clientName == null)
+                .autoCleanup(autoCleanup)
             if (unshelveId != null) {
                 builder.unshelveId(unshelveId)
             }
