@@ -17,6 +17,8 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_PORT
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_DEPOT_STREAM
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_LOCAL_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_CLIENT_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_NAME
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TASKID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
@@ -38,6 +40,8 @@ class SetOutputListener(val context: AtomContext<P4SyncParam>) : SyncTaskListene
         context.result.data[BK_CI_P4_DEPOT_PORT] = StringData(executeResult.depotUrl)
         context.result.data[BK_CI_P4_DEPOT_STREAM] = StringData(executeResult.stream)
         context.result.data[BK_CI_P4_DEPOT_P4_CHARSET] = StringData(executeResult.charset)
+        context.result.data[BK_REPO_P4_REPO_NAME] = StringData(executeResult.repositoryAliasName)
+        context.result.data[BK_REPO_P4_REPO_PATH] = StringData(executeResult.depotUrl)
         // 设置CodeCC扫描需要的仓库信息
         setOutPutForCodeCC(context, executeResult)
     }

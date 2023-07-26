@@ -15,6 +15,7 @@ class ExecuteResult {
     var charset: String = EMPTY
     var clientName: String = EMPTY
     var result: Boolean = false
+    var repositoryAliasName: String = EMPTY
     var changeList = listOf<IChangelistSummary>()
     override fun toString(): String {
         return "ExecuteResult(headCommitId=$headCommitId," +

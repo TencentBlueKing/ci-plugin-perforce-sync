@@ -138,6 +138,7 @@ open class SyncTask(builder: Builder) {
     private fun buildExecuteResult(p4Client: P4Client, fileSpecs: List<IFileSpec>): ExecuteResult {
         val result = ExecuteResult()
         result.depotUrl = repository.getDepotUri()
+        result.repositoryAliasName = repository.aliasName ?: EMPTY
         result.stream = workspace.stream ?: EMPTY
         result.charset = charset
         result.workspacePath = workspace.root

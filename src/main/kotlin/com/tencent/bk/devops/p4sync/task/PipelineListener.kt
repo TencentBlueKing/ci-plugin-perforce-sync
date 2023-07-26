@@ -11,6 +11,7 @@ import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
 import org.slf4j.LoggerFactory
 
 class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
+    val devopsApi = DevopsApi()
 
     override fun after(executeResult: ExecuteResult) {
         // 指定同步文件版本后需对修改记录进行排序/去重，新纪录前面
@@ -19,7 +20,7 @@ class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
         changeList = getDiffChangeLists(changeList, param, executeResult)
         if (changeList.isNotEmpty()) {
             // 保存原材料
-            saveBuildMaterial(changeList, param)
+            saveBuildMaterial(changeList,executeResult)
             // 保存提交信息
             saveChangeCommit(changeList, param)
         } else {
@@ -67,19 +68,18 @@ class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
         }
     }
 
-    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, param: P4SyncParam) {
-        changeList.first().let {
-            if (param.repositoryName.isNullOrBlank()) {
-                param.repositoryName = param.p4port
-            }
-            DevopsApi().saveBuildMaterial(
+    private fun saveBuildMaterial(changeList: List<IChangelistSummary>, executeResult: ExecuteResult) {
+        val change=changeList.first()
+        with(executeResult) {
+            val aliasName= if (repositoryAliasName.isEmpty()) depotUrl else repositoryAliasName
+            devopsApi.saveBuildMaterial(
                 mutableListOf(
                     PipelineBuildMaterial(
-                        aliasName = param.repositoryName,
-                        url = param.p4port,
+                        aliasName = aliasName,
+                        url = depotUrl,
                         branchName = param.stream,
-                        newCommitId = "${it.id}",
-                        newCommitComment = it.description,
+                        newCommitId = "${change.id}",
+                        newCommitComment = change.description,
                         commitTimes = changeList.size,
                         scmType = ScmType.CODE_P4.name,
                     ),
@@ -106,7 +106,7 @@ class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
                     url = p4port,
                 )
             }
-            DevopsApi().addCommit(commitData)
+            devopsApi.addCommit(commitData)
         }
     }
 

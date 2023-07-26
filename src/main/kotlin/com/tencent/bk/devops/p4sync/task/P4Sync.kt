@@ -1,6 +1,7 @@
 package com.tencent.bk.devops.p4sync.task
 
 import com.perforce.p4java.core.file.FileSpecBuilder
+
 import com.perforce.p4java.option.client.ParallelSyncOptions
 import com.perforce.p4java.server.PerforceCharsets
 import com.tencent.bk.devops.atom.AtomContext
@@ -13,11 +14,14 @@ import com.tencent.bk.devops.p4sync.task.enum.RepositoryType
 import com.tencent.bk.devops.p4sync.task.p4.MoreSyncOptions
 import com.tencent.bk.devops.p4sync.task.pojo.P4Repository
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
+import com.tencent.bk.devops.p4sync.task.pojo.RepositoryConfig
 import com.tencent.bk.devops.p4sync.task.service.AuthService
 import org.slf4j.LoggerFactory
 
 @AtomService(paramClass = P4SyncParam::class)
 class P4Sync : TaskAtom<P4SyncParam> {
+    private val authService = AuthService()
+    private val devopsApi = DevopsApi()
     override fun execute(context: AtomContext<P4SyncParam>) {
         with(context) {
             // 参数检查
@@ -25,11 +29,12 @@ class P4Sync : TaskAtom<P4SyncParam> {
             if (result.status != Status.success) {
                 return
             }
-            // 获取凭证信息
-            val credentialInfo = AuthService(param, result, DevopsApi()).getCredentialInfo()
+            // 获取仓库信息
+            val repository = getRepositoryInfo(param)
             // 设置同步任务
             val syncTask = createBuilder(param)
-                .userCredential(credentialInfo[0], credentialInfo[1])
+                .withRepository(repository)
+                .userCredential(repository.username, repository.password)
                 .addListener(PipelineListener(param))
                 .addListener(SetOutputListener(context))
                 .build()
@@ -41,7 +46,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
     fun createBuilder(p4SyncParam: P4SyncParam): SyncTask.Builder {
         with(p4SyncParam) {
             // 获取仓库信息
-            val repository = P4Repository(p4port)
             val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
             val syncOptions = MoreSyncOptions(
                 forceUpdate,
@@ -61,7 +65,6 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 null,
             )
             val builder = SyncTask.Builder()
-                .withRepository(repository)
                 .workspace(p4SyncParam.getWorkspace())
                 .continueOnError(p4SyncParam.keepGoingOnError)
                 .fileSpecs(fileSpecs)
@@ -91,31 +94,45 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.status = Status.failure
                 result.message = "Charset $charsetName not supported."
             }
-            // 检查代码库参数
-            checkRepositoryInfo(param, result)
         }
     }
 
-    private fun checkRepositoryInfo(param: P4SyncParam, result: AtomResult) {
+    private fun getRepositoryInfo(param: P4SyncParam): P4Repository {
         with(param) {
-            // 代码库类型若为空则进行默认值处理
-            repositoryType = repositoryType ?: RepositoryType.URL.name
-            if (repositoryType == RepositoryType.ID.name && repositoryHashId == null) {
-                result.status = Status.failure
-                result.message = "The repository hashId cannot be empty"
+            val type = repositoryType ?: RepositoryType.URL.name
+            return when (type) {
+                RepositoryType.URL.name->{
+                    require(p4port!=null)
+                    require(ticketId!=null)
+                    val credentialInfo = authService.getCredentialInfo(ticketId)
+                    P4Repository(p4port,credentialInfo[0],credentialInfo[1])
+                }
+                RepositoryType.NAME.name,
+                RepositoryType.ID.name->{
+                    // 使用别名或ID匹配时需读取代码库信息
+                    // 构建代码库配置
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = repositoryHashId,
+                        repositoryName = repositoryName,
+                        repositoryType = RepositoryType.valueOf(type),
+                    )
+                    // 获取代码信息
+                    val result = devopsApi.getRepository(repositoryConfig)
+                    if (result.isNotOk() || result.data == null) {
+                        logger.error("Fail to get the repositoryInfo($repositoryConfig) because of ${result.message}")
+                        throw IllegalArgumentException(result.message!!)
+                    }
+                    logger.info("get the repo:${result.data}")
+                    val ticketId = result.data!!.credentialId
+                    val p4port = result.data!!.url
+                    param.repositoryName = result.data!!.aliasName
+                    param.repositoryHashId = result.data!!.repoHashId
+                    val credentialInfo = authService.getCredentialInfo(ticketId)
+                    P4Repository(p4port,credentialInfo[0],credentialInfo[1])
+                }
+                else -> error("Not support repository type $repositoryType.")
             }
-            if (repositoryType == RepositoryType.NAME.name && repositoryName == null) {
-                result.status = Status.failure
-                result.message = "The repository name cannot be empty"
-            }
-            if (repositoryType == RepositoryType.URL.name && p4port.isEmpty()) {
-                result.status = Status.failure
-                result.message = "The repository p4port cannot be empty"
-            }
-            if (!RepositoryType.values().map { it.name }.contains(repositoryType)) {
-                result.status = Status.failure
-                result.message = "Not support repository type $repositoryType"
-            }
+
         }
     }
 

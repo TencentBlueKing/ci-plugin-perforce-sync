@@ -2,6 +2,7 @@ package com.tencent.bk.devops.p4sync.task
 
 import com.tencent.bk.devops.atom.common.Status
 import com.tencent.bk.devops.atom.pojo.AtomResult
+import com.tencent.bk.devops.p4sync.task.pojo.P4Repository
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -133,7 +134,13 @@ class P4SyncTest {
     private fun syncAndCheck(param: P4SyncParam, ticket: String? = null) {
         val result = AtomResult()
         val credential = ticket ?: password
+        val repository=P4Repository(
+            username = userName,
+            password = credential,
+            p4port = p4port,
+        )
         val executeResult = p4Sync.createBuilder(param)
+            .withRepository(repository)
             .userCredential(userName, credential)
             .build()
             .execute()

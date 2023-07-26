@@ -5,6 +5,9 @@ import com.tencent.bk.devops.p4sync.task.constants.P4_JAVA_SSL_SCHEME
 
 data class P4Repository(
     val p4port: String,
+    val username: String,
+    val password: String,
+    val aliasName: String? = null,
 ) {
     fun getDepotUri(): String {
         return if (p4port.startsWith(SSL_PREFIX)) {
