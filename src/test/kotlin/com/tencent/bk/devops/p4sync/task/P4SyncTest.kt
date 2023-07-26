@@ -138,6 +138,7 @@ class P4SyncTest {
             username = userName,
             password = credential,
             p4port = p4port,
+            ticketId = ""
         )
         val executeResult = p4Sync.createBuilder(param)
             .withRepository(repository)

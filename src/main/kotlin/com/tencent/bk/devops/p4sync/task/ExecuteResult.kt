@@ -28,6 +28,8 @@ class ExecuteResult {
             "depotUrl=$depotUrl," +
             "stream=$stream," +
             "charset=$charset," +
-            "clientName=$clientName)"
+            "clientName=$clientName," +
+            "repositoryAliasName=$repositoryAliasName," +
+            "ticketId=$ticketId)"
     }
 }
