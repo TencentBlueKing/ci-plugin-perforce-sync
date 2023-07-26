@@ -41,7 +41,7 @@ class P4Sync : TaskAtom<P4SyncParam> {
     fun createBuilder(p4SyncParam: P4SyncParam): SyncTask.Builder {
         with(p4SyncParam) {
             // 获取仓库信息
-            val repository = P4Repository(p4port)
+            val repository = P4Repository(p4port!!)
             val fileSpecs = FileSpecBuilder.makeFileSpecList(getFileSpecList())
             val syncOptions = MoreSyncOptions(
                 forceUpdate,
@@ -108,9 +108,14 @@ class P4Sync : TaskAtom<P4SyncParam> {
                 result.status = Status.failure
                 result.message = "The repository name cannot be empty"
             }
-            if (repositoryType == RepositoryType.URL.name && p4port.isEmpty()) {
+            if (repositoryType == RepositoryType.URL.name) {
                 result.status = Status.failure
-                result.message = "The repository p4port cannot be empty"
+                if (p4port.isNullOrBlank()) {
+                    result.message = "The repository p4port cannot be empty"
+                }
+                if (ticketId.isNullOrBlank()) {
+                    result.message = "The repository ticketId cannot be empty"
+                }
             }
             if (!RepositoryType.values().map { it.name }.contains(repositoryType)) {
                 result.status = Status.failure

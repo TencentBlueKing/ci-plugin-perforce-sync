@@ -76,7 +76,7 @@ class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
                 mutableListOf(
                     PipelineBuildMaterial(
                         aliasName = param.repositoryName,
-                        url = param.p4port,
+                        url = param.p4port!!,
                         branchName = param.stream,
                         newCommitId = "${it.id}",
                         newCommitComment = it.description,

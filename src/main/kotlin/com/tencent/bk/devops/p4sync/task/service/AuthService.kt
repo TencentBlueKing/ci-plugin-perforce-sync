@@ -48,7 +48,7 @@ class AuthService(
                 param.repositoryHashId = result.data!!.repoHashId
             }
             // 读取凭证
-            val (credentialInfo, credentialType) = CredentialUtils.getCredentialWithType(credentialId)
+            val (credentialInfo, credentialType) = CredentialUtils.getCredentialWithType(credentialId!!)
             if (credentialType != CredentialType.USERNAME_PASSWORD) {
                 throw IllegalArgumentException("Certificate type invalid[$credentialType],Required " +
                                                    "type[USERNAME_PASSWORD]")

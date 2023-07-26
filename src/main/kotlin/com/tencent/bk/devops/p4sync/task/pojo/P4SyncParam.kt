@@ -17,7 +17,7 @@ class P4SyncParam(
      * 如: localhost:1666
      * */
     @JsonProperty("p4port")
-    var p4port: String = "",
+    var p4port: String? = "",
     /**
      * HTTP代理地址
      * */
@@ -27,7 +27,7 @@ class P4SyncParam(
      * 用户凭证
      * */
     @JsonProperty("ticketId")
-    val ticketId: String = "",
+    val ticketId: String? = "",
     /**
      * 代码库类型
      * ID: 按代码库选择
