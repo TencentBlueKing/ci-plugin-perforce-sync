@@ -7,6 +7,7 @@ data class P4Repository(
     val p4port: String,
     val username: String,
     val password: String,
+    val ticketId: String,
     val aliasName: String? = null,
 ) {
     fun getDepotUri(): String {

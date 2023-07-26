@@ -105,7 +105,12 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     require(p4port!=null)
                     require(ticketId!=null)
                     val credentialInfo = authService.getCredentialInfo(ticketId)
-                    P4Repository(p4port,credentialInfo[0],credentialInfo[1])
+                    P4Repository(
+                        p4port = p4port,
+                        username = credentialInfo[0],
+                        password = credentialInfo[1],
+                        ticketId = ticketId
+                    )
                 }
                 RepositoryType.NAME.name,
                 RepositoryType.ID.name->{
@@ -128,7 +133,13 @@ class P4Sync : TaskAtom<P4SyncParam> {
                     param.repositoryName = result.data!!.aliasName
                     param.repositoryHashId = result.data!!.repoHashId
                     val credentialInfo = authService.getCredentialInfo(ticketId)
-                    P4Repository(p4port,credentialInfo[0],credentialInfo[1])
+                    P4Repository(
+                        p4port = p4port,
+                        username = credentialInfo[0],
+                        password = credentialInfo[1],
+                        ticketId = ticketId,
+                        aliasName = result.data!!.aliasName
+                    )
                 }
                 else -> error("Not support repository type $repositoryType.")
             }

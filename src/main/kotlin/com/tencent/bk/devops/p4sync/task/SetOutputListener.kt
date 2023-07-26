@@ -52,7 +52,7 @@ class SetOutputListener(val context: AtomContext<P4SyncParam>) : SyncTaskListene
         context.result.data[BK_REPO_CONTAINER_ID + taskId] =
             StringData(context.allParameters["pipeline.job.id"]?.toString() ?: "")
         context.result.data[BK_REPO_TYPE + taskId] = StringData("perforce")
-        context.result.data[BK_REPO_TICKET_ID + taskId] = StringData(context.param.ticketId)
+        context.result.data[BK_REPO_TICKET_ID + taskId] = StringData(executeResult.ticketId)
         context.result.data[BK_REPO_DEPOT_PORT + taskId] = StringData(executeResult.depotUrl)
         context.result.data[BK_REPO_DEPOT_STREAM + taskId] = StringData(executeResult.stream)
         context.result.data[BK_REPO_DEPOT_P4_CHARSET + taskId] = StringData(executeResult.charset)

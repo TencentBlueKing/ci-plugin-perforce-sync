@@ -139,6 +139,7 @@ open class SyncTask(builder: Builder) {
         val result = ExecuteResult()
         result.depotUrl = repository.getDepotUri()
         result.repositoryAliasName = repository.aliasName ?: EMPTY
+        result.ticketId = repository.ticketId
         result.stream = workspace.stream ?: EMPTY
         result.charset = charset
         result.workspacePath = workspace.root
