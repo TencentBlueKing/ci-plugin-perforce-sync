@@ -146,6 +146,7 @@ open class SyncTask(builder: Builder) {
             p4Client.getChangeListByStream(
                 max = P4_CHANGELIST_MAX_MOST_RECENT,
                 streamName = workspace.stream!!,
+                rootPath = workspace.root,
                 fileSpecs = fileSpecs,
             )
         } else {

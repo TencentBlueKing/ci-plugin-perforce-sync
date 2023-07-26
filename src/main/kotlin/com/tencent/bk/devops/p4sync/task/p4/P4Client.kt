@@ -237,22 +237,17 @@ class P4Client(
         return server.getChangelists(fileSpecs, ops)
     }
 
-    fun getLastChangeByStream(
-        streamName: String,
-        fileSpecs: List<IFileSpec>,
-    ): IChangelistSummary {
-        return getChangeListByStream(1, streamName, fileSpecs).first()
-    }
-
     fun getChangeListByStream(
         max: Int,
         streamName: String,
+        rootPath: String,
         fileSpecs: List<IFileSpec>,
     ): List<IChangelistSummary> {
         val summary = ClientSummary()
         val clientName = "${System.nanoTime()}.tmp"
         summary.stream = streamName
         summary.name = clientName
+        summary.root = rootPath
         summary.description = "Created by bk-ci plugin(PerforceSync)."
         val client = Client(summary, server, false)
         try {
