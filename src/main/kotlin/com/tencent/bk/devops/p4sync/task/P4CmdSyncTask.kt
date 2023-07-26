@@ -28,8 +28,16 @@ class P4CmdSyncTask(builder: Builder) : SyncTask(builder) {
             charset,
             "-u",
             userName,
-            "sync",
         )
+        client.hostName?.let {
+            command.addAll(
+                listOf(
+                    "-H",
+                    it,
+                ),
+            )
+        }
+        command.add("sync")
         command.addAll(opts)
         val commandStr = command.joinToString(" ")
         // 为了展示终端shell命令样式，所以这里直接打印到终端，而不通过日志框架。
