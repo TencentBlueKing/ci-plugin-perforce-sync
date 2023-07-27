@@ -39,11 +39,12 @@ class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
         val result = mutableListOf<IChangelistSummary>()
         with(param) {
             var repositoryConfig: RepositoryConfig? = null
-            if (repositoryType != RepositoryType.URL.name) {
+            val type = repositoryType ?: RepositoryType.URL.name
+            if (type != RepositoryType.URL.name) {
                 repositoryConfig = RepositoryConfig(
                     repositoryHashId = repositoryHashId,
                     repositoryName = repositoryName,
-                    repositoryType = RepositoryType.valueOf(repositoryType!!),
+                    repositoryType = RepositoryType.valueOf(type),
                 )
             }
             // 获取历史信息
