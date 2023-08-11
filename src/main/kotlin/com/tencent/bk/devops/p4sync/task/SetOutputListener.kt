@@ -22,6 +22,9 @@ import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_P4_REPO_PATH
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TASKID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TICKET_ID
 import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_TYPE
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_CONFIG_TYPE
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_HASH_ID
+import com.tencent.bk.devops.p4sync.task.constants.BK_REPO_NAME
 import com.tencent.bk.devops.p4sync.task.pojo.P4SyncParam
 
 class SetOutputListener(val context: AtomContext<P4SyncParam>) : SyncTaskListener {
@@ -58,5 +61,8 @@ class SetOutputListener(val context: AtomContext<P4SyncParam>) : SyncTaskListene
         context.result.data[BK_REPO_DEPOT_P4_CHARSET + taskId] = StringData(executeResult.charset)
         context.result.data[BK_REPO_P4_CLIENT_NAME + taskId] = StringData(executeResult.clientName)
         context.result.data[BK_REPO_LOCAL_PATH + taskId] = StringData(context.param.rootPath ?: "")
+        context.result.data[BK_REPO_CONFIG_TYPE + taskId] = StringData(context.param.repositoryType ?: "")
+        context.result.data[BK_REPO_HASH_ID + taskId] = StringData(context.param.repositoryHashId ?: "")
+        context.result.data[BK_REPO_NAME + taskId] = StringData(context.param.clientName ?: "")
     }
 }

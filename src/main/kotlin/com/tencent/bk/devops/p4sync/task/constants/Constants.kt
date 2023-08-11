@@ -34,6 +34,22 @@ const val BK_REPO_DEPOT_P4_CHARSET = "bk_repo_depot_p4_charset_"
 const val BK_REPO_P4_CLIENT_NAME = "bk_repo_p4_client_name_"
 const val BK_REPO_LOCAL_PATH = "bk_repo_local_path_"
 
+//添加仓库信息支持CodeCC
+/**
+ * 代码库类型，对应repositoryType值
+ */
+const val BK_REPO_CONFIG_TYPE = "bk_repo_config_type_"
+
+/**
+ * 代码库Id，对应CodeP4Repository.repoHashId
+ */
+const val BK_REPO_HASH_ID = "bk_repo_hashId_"
+
+/**
+ * 代码库工作空间，对应clientName
+ */
+const val BK_REPO_NAME = "bk_repo_name_"
+
 // 代码库ID
 const val BK_REPO_P4_REPO_ID = "BK_REPO_P4_REPO_ID"
 
