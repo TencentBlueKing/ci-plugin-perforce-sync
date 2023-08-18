@@ -30,15 +30,14 @@
     "versionInfo": {
       "publisher": "Blueking",
       "releaseType": "NEW",
-      "version": "1.0.0",
-      "versionContent": "init"
+      "version": "1.0.0"
     }
   },
   "input": {
     "repositoryType": {
       "label": "Repository",
       "default": "URL",
-      "desc": "Value Including ID/NAME/URL",
+      "desc": "Based on input method, Filed value is ID or Alias Name or URL",
       "type": "enum-input",
       "required": true,
       "disabled": false,
@@ -46,21 +45,21 @@
       "isSensitive": false,
       "list": [
         {
-          "label": "Select by Repository ID",
+          "label": "Select Repository",
           "value": "ID"
         },
         {
-          "label": "Select by Repository NAME",
+          "label": "Enter by Repository Alias Name",
           "value": "NAME"
         },
         {
-          "label": "Insert Repository URL",
+          "label": "Enter by Repository URL",
           "value": "URL"
         }
       ]
     },
     "repositoryHashId": {
-      "label": "Select by Repository ID",
+      "label": "",
       "default": "",
       "placeholder": "Please Select Repository ID",
       "type": "selector",
@@ -90,11 +89,11 @@
       }
     },
     "repositoryName": {
-      "label": "Select by Repository NAME",
+      "label": "",
       "default": "",
-      "placeholder": "Please insert Repository NAME",
+      "placeholder": "Please enter repository alias name",
       "type": "vuex-input",
-      "desc": "Description",
+      "desc": "",
       "required": false,
       "disabled": false,
       "hidden": false,
@@ -110,10 +109,10 @@
       }
     },
     "p4port": {
-      "label": "Perforce server address",
-      "placeholder": "for example: localhost:1666",
+      "label": "",
+      "placeholder": "Please enter p4 server url, for example: localhost:1666",
       "type": "vuex-input",
-      "desc": "p4 server address",
+      "desc": "",
       "default": "",
       "required": false,
       "disabled": false,
@@ -130,10 +129,10 @@
       }
     },
     "ticketId": {
-      "label": "User credentials",
+      "label": "Repository Credential",
       "placeholder": "Please select the corresponding certificate",
       "type": "selector",
-      "desc": " Credentials support two types of password and ticket, use the credential type user name + password, the password can be entered Perforce password or ticket  ",
+      "desc": " Credential support two types of username+password and ticket, Use the '[USERNAME + PASSWORD]' type of credential, and the password field should be filled with either the p4 password or ticket",
       "required": true,
       "disabled": false,
       "hidden": false,
@@ -145,7 +144,7 @@
         "paramId": "credentialId",
         "paramName": "credentialId",
         "itemTargetUrl": "/ticket/{projectId}/createCredential/USERNAME_PASSWORD",
-        "itemText": "Add new credentials",
+        "itemText": "Add New Credential",
         "hasAddItem": true
       },
       "rely": {
@@ -159,7 +158,7 @@
       }
     },
     "proxy_flag": {
-      "text": "Use proxy",
+      "text": "Enable proxy",
       "default": false,
       "desc": "",
       "type": "atom-checkbox",

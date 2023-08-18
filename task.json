@@ -7,6 +7,32 @@
     "demands": [],
     "target": "$bk_java_path -Dfile.encoding=utf8 -jar PerforceSync-jar-with-dependencies.jar"
   },
+  "releaseInfo": {
+    "projectId": "demo",
+    "name": "拉取P4",
+    "language": "java",
+    "logoUrl": "${{indexFile(\"logo.png\")}}",
+    "category": "TASK",
+    "classifyCode": "scm",
+    "jobType": "AGENT",
+    "os": [
+      "LINUX",
+      "MACOS",
+      "WINDOWS"
+    ],
+    "labelCodes": [
+    ],
+    "summary": "全功能实现p4同步",
+    "description": "${{indexFile(\"README.md\")}}",
+    "configInfo": {
+      "frontendType": "NORMAL"
+    },
+    "versionInfo": {
+      "publisher": "Blueking",
+      "releaseType": "NEW",
+      "version": "1.0.0"
+    }
+  },
   "input": {
     "repositoryType": {
       "label": "代码库",
@@ -33,7 +59,7 @@
       ]
     },
     "repositoryHashId": {
-      "label": "按代码库选择",
+      "label": "",
       "default": "",
       "placeholder": "请选择代码库名称",
       "type": "selector",
@@ -63,7 +89,7 @@
       }
     },
     "repositoryName": {
-      "label": "按代码库别名输入",
+      "label": "",
       "default": "",
       "placeholder": "请输入代码库别名",
       "type": "vuex-input",
@@ -83,10 +109,10 @@
       }
     },
     "p4port": {
-      "label": "P4服务器地址",
+      "label": "",
       "placeholder": "如: localhost:1666",
       "type": "vuex-input",
-      "desc": "p4服务器地址",
+      "desc": "请输入P4服务器地址，如: localhost:1666",
       "default": "",
       "required": false,
       "disabled": false,
@@ -152,10 +178,12 @@
       "isSensitive": false,
       "rely": {
         "operation": "AND",
-        "expression": [{
-          "key": "proxy_flag",
-          "value": true
-        }]
+        "expression": [
+          {
+            "key": "proxy_flag",
+            "value": true
+          }
+        ]
       }
     },
     "charsetName": {
@@ -164,10 +192,11 @@
       "desc": "The character set used by p4Sync when syncing files from the Perforce server. This should be set to 'none' unless connected to a Unicode enabled Perforce server.",
       "required": false,
       "default": "none",
-      "options": [{
-        "id": "none",
-        "name": "none"
-      },
+      "options": [
+        {
+          "id": "none",
+          "name": "none"
+        },
         {
           "id": "utf8",
           "name": "utf8"
@@ -326,7 +355,7 @@
       "label": "文件保存路径",
       "placeholder": "请填写工作空间相对目录，不填则默认为工作空间根目录",
       "type": "vuex-input",
-      "desc": "当前流水线存在多个文件拉取插件，你需设置此字段以解决冲突问题",
+      "desc": "若当前 Job 有多个代码拉取步骤，请设置此字段以解决代码存储路径冲突问题",
       "required": false,
       "disabled": false,
       "hidden": false,
@@ -349,10 +378,11 @@
       "disabled": false,
       "hidden": false,
       "isSensitive": false,
-      "list": [{
-        "label": "Stream",
-        "value": "Stream"
-      },
+      "list": [
+        {
+          "label": "Stream",
+          "value": "Stream"
+        },
         {
           "label": "Manual",
           "value": "Manual"
@@ -360,7 +390,7 @@
       ]
     },
     "stream": {
-      "label": "Stream",
+      "label": "Stream路径",
       "placeholder": "如：//JamCode/main",
       "type": "vuex-input",
       "desc": "",
@@ -370,33 +400,37 @@
       "isSensitive": false,
       "rely": {
         "operation": "AND",
-        "expression": [{
-          "key": "depotMode",
-          "value": "Stream"
-        }]
+        "expression": [
+          {
+            "key": "depotMode",
+            "value": "Stream"
+          }
+        ]
       }
     },
     "view": {
-      "label": "View mapping",
+      "label": "仓库映射",
       "placeholder": "//depot/...     //${workspace}/...\n//depot/dir/... //${workspace}/dir2/...",
       "type": "vuex-textarea",
-      "desc": "仓库和工作空间映射关系,",
+      "desc": "仓库和工作空间映射关系",
       "required": true,
       "disabled": false,
       "hidden": false,
       "isSensitive": false,
       "rely": {
         "operation": "AND",
-        "expression": [{
-          "key": "depotMode",
-          "value": "Manual"
-        }]
+        "expression": [
+          {
+            "key": "depotMode",
+            "value": "Manual"
+          }
+        ]
       }
     },
     "autoCleanup": {
-      "text": "Auto cleanup and sync",
+      "text": "自动清理并同步",
       "default": false,
-      "desc": "REPLACE missing/modified files,DELETE generated files.",
+      "desc": "替换丢失/修改的文件，删除生成的文件",
       "type": "atom-checkbox",
       "required": true,
       "disabled": false,
@@ -417,7 +451,7 @@
       "label": "同步文件版本",
       "placeholder": "file.c#4 \n//depot/proj1/...@21",
       "type": "vuex-textarea",
-      "desc": "不填则同步所有文件,支持p4的FileSpec和RevSpec，每行一个版本信息",
+      "desc": "为空则同步所有文件，支持p4的FileSpec和RevSpec，每行一个版本信息",
       "required": false,
       "disabled": false,
       "hidden": false,
@@ -499,7 +533,7 @@
       "groupName": "syncOptions"
     },
     "max": {
-      "label": "同步最大数量",
+      "label": "最大同步数量",
       "desc": "p4 sync -m",
       "type": "vuex-input",
       "required": false,
@@ -509,7 +543,7 @@
       "groupName": "syncOptions"
     },
     "netMaxWait": {
-      "label": "同步最大等待时间（ms）",
+      "label": "同步最长等待时间（ms）",
       "desc": "网络连接超时时间",
       "type": "vuex-input",
       "required": false,
@@ -646,11 +680,12 @@
       "groupName": "fileOptions"
     }
   },
-  "inputGroups": [{
-    "name": "fileOptions",
-    "label": "文件选项",
-    "isExpanded": false
-  },
+  "inputGroups": [
+    {
+      "name": "fileOptions",
+      "label": "文件选项",
+      "isExpanded": false
+    },
     {
       "name": "syncOptions",
       "label": "同步选项",
