@@ -15,7 +15,7 @@ class PipelineListener(val param: P4SyncParam) : SyncTaskListener {
 
     override fun after(executeResult: ExecuteResult) {
         // 指定同步文件版本后需对修改记录进行排序/去重，新纪录前面
-        var changeList = executeResult.changeList.distinctBy { it.id }.sortedBy { -it.id }
+        var changeList = executeResult.changeList
         // 对比历史构建，提取本次构建拉取的commit
         changeList = getDiffChangeLists(changeList, param, executeResult)
         if (changeList.isNotEmpty()) {

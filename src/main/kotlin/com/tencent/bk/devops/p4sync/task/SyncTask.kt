@@ -144,6 +144,7 @@ open class SyncTask(builder: Builder) {
         result.charset = charset
         result.workspacePath = workspace.root
         result.clientName = workspace.name
+        // 需排倒序且去重，否则指定fileSpecs后可能导致changelist乱序
         val changeList = if (workspace.stream != null) {
             p4Client.getChangeListByStream(
                 max = P4_CHANGELIST_MAX_MOST_RECENT,
@@ -156,7 +157,7 @@ open class SyncTask(builder: Builder) {
                 max = P4_CHANGELIST_MAX_MOST_RECENT,
                 fileSpecs = fileSpecs,
             )
-        }
+        }.distinctBy { it.id }.sortedBy { -it.id }
         // 最新修改
         changeList.firstOrNull()?.let {
             val logChange = formatChange(it)
