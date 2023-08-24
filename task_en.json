@@ -23,14 +23,15 @@
     ],
     "labelCodes": [],
     "summary": "Full-featured implementation p4 sync",
-    "description": "${{indexFile(\"README.md\")}}",
+    "description": "${{indexFile(\"README_en.md\")}}",
     "configInfo": {
       "frontendType": "NORMAL"
     },
     "versionInfo": {
       "publisher": "BlueKing",
       "releaseType": "NEW",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "versionContent": "init"
     }
   },
   "input": {
@@ -614,7 +615,7 @@
       "groupName": "fileOptions"
     },
     "allWrite": {
-      "text": "All write",
+      "text": "All files writable",
       "default": false,
       "desc": "If selected, all unopened files will always be writable. By default, the Helix server sets unopened files as read-only.",
       "type": "atom-checkbox",

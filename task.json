@@ -21,8 +21,7 @@
       "MACOS",
       "WINDOWS"
     ],
-    "labelCodes": [
-    ],
+    "labelCodes": [],
     "summary": "全功能实现p4同步",
     "description": "${{indexFile(\"README.md\")}}",
     "configInfo": {
@@ -31,7 +30,8 @@
     "versionInfo": {
       "publisher": "BlueKing",
       "releaseType": "NEW",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "versionContent": "init"
     }
   },
   "input": {

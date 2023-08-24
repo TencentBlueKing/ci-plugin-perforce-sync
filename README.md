@@ -8,10 +8,10 @@
 * 支持SSL
 * 支持unshelve
 * 支持文件选项
-* 支持p4 FileSpec和RevSpec，即自定义拉取
+* 支持p4 FileSpec和RevSpec
 * 支持同步参数配置
 * 支持并发同步和相关参数配置
-* 适用场景
+## 适用场景
 * 需要同步p4服务器文件
 * 本地不想装p4环境，一键同步
 
@@ -61,5 +61,3 @@
 * 同步文件版本格式不对
 
   参考https://www.perforce.com/manuals/v20.2/cmdref/Content/CmdRef/p4_sync.html#p4_sync
-
-
