@@ -172,7 +172,7 @@
       "label": "HTTP代理地址",
       "placeholder": "",
       "type": "vuex-input",
-      "desc": "HTTP代理地址",
+      "desc": "请输入HTTP代理地址",
       "required": false,
       "disabled": false,
       "hidden": false,
@@ -364,7 +364,7 @@
     },
     "clientName": {
       "label": "工作空间名称",
-      "desc": "如果该工作空间不存在则会新建，选项为空时则创建临时工作空间",
+      "desc": "若该工作空间不存在则会新建，不填则创建临时工作空间",
       "type": "vuex-input",
       "required": false,
       "disabled": false,
@@ -411,7 +411,7 @@
     },
     "view": {
       "label": "仓库映射",
-      "placeholder": "如：//depot/...     //${workspace}/...\n//depot/dir/... //${workspace}/dir2/...",
+      "placeholder": "//depot/...     //${workspace}/...\n//depot/dir/... //${workspace}/dir2/...",
       "type": "vuex-textarea",
       "desc": "仓库和工作空间映射关系",
       "required": true,
@@ -439,7 +439,7 @@
       "isSensitive": true
     },
     "unshelveId": {
-      "label": "unshelveId",
+      "label": "Unshelve Id",
       "placeholder": "如：526",
       "type": "vuex-input",
       "desc": "",
@@ -709,11 +709,11 @@
     },
     "BK_CI_P4_DEPOT_HEAD_CHANGE_CLIENT_ID": {
       "type": "string",
-      "description": "本次构建最后的change的来源客户端id"
+      "description": "本次构建最后的change的client id"
     },
     "BK_CI_P4_DEPOT_HEAD_CHANGE_USER": {
       "type": "string",
-      "description": "本次构建最后的修改用户"
+      "description": "本次构建最后的change的用户"
     },
     "BK_CI_P4_DEPOT_LAST_CHANGE_ID": {
       "type": "string",
@@ -725,15 +725,15 @@
     },
     "BK_CI_P4_DEPOT_PORT": {
       "type": "string",
-      "description": "P4服务器地址"
+      "description": "仓库的URL"
     },
     "BK_CI_P4_DEPOT_STREAM": {
       "type": "string",
-      "description": "Stream路径"
+      "description": "stream名称"
     },
     "BK_CI_P4_DEPOT_P4_CHARSET": {
       "type": "string",
-      "description": "拉取使用的字符集"
+      "description": "拉取使用的charset"
     }
   }
 }
