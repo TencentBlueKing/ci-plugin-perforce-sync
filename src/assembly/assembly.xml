@@ -27,4 +27,21 @@
         </fileSet>
     </fileSets>
 
+    <files>
+        <file>
+            <source>task.json</source>
+            <outputDirectory>/</outputDirectory>
+            <destName>task.json</destName>
+        </file>
+        <file>
+            <source>README.md</source>
+            <outputDirectory>/file</outputDirectory>
+            <destName>README.md</destName>
+        </file>
+        <file>
+            <source>images/logo.png</source>
+            <outputDirectory>/file</outputDirectory>
+        </file>
+    </files>
+
 </assembly>
